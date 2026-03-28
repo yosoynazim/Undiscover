@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDISCOVER — Archivo</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #1c1c1c;
+    --blue: #2e5bff;
+    --mercury: #99afbf;
+    --white: #f8f9fa;
+    --surface: #242424;
+    --grid: #ffffff08;
+    --green: #39ff8a;
+    --green-dim: #39ff8a60;
+    --amber: #ffb830;
+    --term-bg: #0f0f0f;
+    --term-surface: #161616;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow: hidden;
+    cursor: none;
+    display: flex; flex-direction: column;
+  }
+
+  .cursor {
+    width: 10px; height: 10px; background: var(--green);
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+  .cursor-ring {
+    width: 28px; height: 28px;
+    border: 1px solid var(--green); border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    transition: transform .15s, width .15s, height .15s;
+    opacity: .4;
+  }
+
+  /* NAV */
+  nav {
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px;
+    border-bottom: 1px solid #ffffff10;
+    background: var(--black);
+    z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 20px; letter-spacing: .08em;
+    color: var(--white); text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo span {
+    color: var(--blue); font-size: 11px;
+    border: 1px solid var(--blue); padding: 2px 7px; letter-spacing: .15em;
+  }
+  .nav-links {
+    display: flex; gap: 28px; list-style: none;
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .nav-links a { color: var(--mercury); text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-links a.active { color: var(--green); }
+  .nav-right {
+    display: flex; align-items: center; gap: 16px;
+  }
+  .nav-tag {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    color: var(--green); border: 1px solid var(--green);
+    padding: 3px 10px; letter-spacing: .1em;
+  }
+
+  /* TERMINAL WINDOW */
+  .terminal-window {
+    flex: 1;
+    display: flex; flex-direction: column;
+    background: var(--term-bg);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* scanline effect */
+  .terminal-window::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,.08) 2px,
+      rgba(0,0,0,.08) 4px
+    );
+    pointer-events: none; z-index: 10;
+  }
+
+  /* CRT vignette */
+  .terminal-window::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(0,0,0,.5) 100%);
+    pointer-events: none; z-index: 11;
+  }
+
+  /* TITLEBAR */
+  .titlebar {
+    flex-shrink: 0;
+    display: flex; align-items: center;
+    padding: 10px 16px; gap: 8px;
+    background: var(--term-surface);
+    border-bottom: 1px solid #ffffff08;
+    z-index: 20;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #febc2e; }
+  .dot.g { background: #28c840; }
+  .titlebar-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; color: #ffffff35;
+    letter-spacing: .12em; margin-left: 12px;
+  }
+  .titlebar-right {
+    margin-left: auto;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; color: #ffffff20;
+    letter-spacing: .1em;
+    display: flex; gap: 20px;
+  }
+  .titlebar-right span { color: var(--green-dim); }
+
+  /* SPLIT: sidebar + main */
+  .term-split {
+    flex: 1; display: flex; overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  .term-sidebar {
+    width: 280px; flex-shrink: 0;
+    border-right: 1px solid #ffffff08;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    background: #0c0c0c;
+  }
+  .sidebar-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #ffffff08;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: #ffffff25;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .sidebar-header span { color: var(--green-dim); }
+
+  .tree-scroll {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 8px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff10 transparent;
+  }
+  .tree-scroll::-webkit-scrollbar { width: 3px; }
+  .tree-scroll::-webkit-scrollbar-thumb { background: #ffffff10; }
+
+  /* Tree nodes */
+  .t-row {
+    display: flex; align-items: center;
+    padding: 4px 12px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; line-height: 1.4;
+    cursor: none; user-select: none;
+    transition: background .12s;
+    gap: 4px;
+  }
+  .t-row:hover { background: #ffffff06; }
+  .t-row.folder-row { color: var(--blue); }
+  .t-row.folder-row:hover { background: #2e5bff0a; }
+  .t-row.file-row  { color: #ffffff50; padding-left: 28px; }
+  .t-row.file-row:hover { color: #ffffff90; background: #ffffff05; }
+  .t-row.active    { color: var(--green) !important; background: #39ff8a0c !important; }
+  .t-row.focused   { background: #ffffff0a; }
+
+  .t-connector { color: #ffffff15; white-space: pre; font-size: 12px; }
+  .t-icon      { font-size: 13px; flex-shrink: 0; margin-right: 2px; }
+  .t-name      { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .t-badge     {
+    font-size: 9px; padding: 1px 6px;
+    border: 1px solid currentColor; opacity: .4;
+    margin-left: auto; flex-shrink: 0;
+    letter-spacing: .1em;
+  }
+
+  .t-children { overflow: hidden; max-height: 600px; transition: max-height .25s ease; }
+  .t-children.closed { max-height: 0; }
+
+  /* MAIN PANEL */
+  .term-main {
+    flex: 1; display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  /* Tab bar */
+  .tab-bar {
+    flex-shrink: 0;
+    display: flex; align-items: stretch;
+    border-bottom: 1px solid #ffffff08;
+    background: var(--term-surface);
+    overflow-x: auto;
+  }
+  .term-tab {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .08em;
+    padding: 10px 20px;
+    color: #ffffff35; border-right: 1px solid #ffffff08;
+    cursor: none; white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+    transition: color .15s, background .15s;
+    border-bottom: 2px solid transparent;
+  }
+  .term-tab:hover { color: #ffffff70; background: #ffffff04; }
+  .term-tab.active {
+    color: var(--green);
+    background: #0f0f0f;
+    border-bottom-color: var(--green);
+  }
+  .term-tab .tab-close {
+    color: #ffffff20; font-size: 14px; line-height: 1;
+    margin-left: 4px;
+  }
+  .term-tab:hover .tab-close { color: #ffffff50; }
+
+  /* OUTPUT SCROLL */
+  .term-output {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 20px 28px;
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff10 transparent;
+    font-family: 'Share Tech Mono', monospace;
+  }
+  .term-output::-webkit-scrollbar { width: 4px; }
+  .term-output::-webkit-scrollbar-thumb { background: #ffffff10; }
+
+  /* Output lines */
+  .o-line {
+    font-size: 13px; line-height: 1.8;
+    animation: fadeIn .15s both;
+  }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  .o-cmd     { color: var(--white); }
+  .o-path    { color: var(--blue); }
+  .o-prompt  { color: var(--green); }
+  .o-output  { color: #ffffff50; }
+  .o-dim     { color: #ffffff25; }
+  .o-error   { color: #ff4444; }
+  .o-success { color: var(--green); }
+  .o-amber   { color: var(--amber); }
+  .o-blue    { color: var(--blue); }
+  .o-white   { color: var(--white); }
+  .o-header  { color: var(--green); font-size: 14px; letter-spacing: .1em; }
+
+  .o-spacer { height: 8px; }
+  .o-divider {
+    border: none; border-top: 1px solid #ffffff0a;
+    margin: 12px 0;
+  }
+
+  /* Article preview card inside terminal */
+  .o-card {
+    border: 1px solid #ffffff0f;
+    padding: 16px 20px;
+    margin: 8px 0;
+    cursor: none;
+    transition: border-color .15s, background .15s;
+    display: block; text-decoration: none;
+    position: relative; overflow: hidden;
+  }
+  .o-card::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px; background: var(--blue);
+    transform: scaleY(0); transform-origin: bottom;
+    transition: transform .2s;
+  }
+  .o-card:hover { border-color: #ffffff20; background: #ffffff03; }
+  .o-card:hover::before { transform: scaleY(1); }
+  .o-card.active-card { border-color: var(--green); background: #39ff8a06; }
+  .o-card.active-card::before { background: var(--green); transform: scaleY(1); }
+
+  .card-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .card-index { color: var(--green-dim); font-size: 11px; min-width: 28px; }
+  .card-title { color: var(--white); font-size: 13px; flex: 1; min-width: 200px; }
+  .card-title:hover { color: var(--green); }
+  .card-meta  { color: #ffffff30; font-size: 11px; display: flex; gap: 16px; flex-wrap: wrap; margin-top: 6px; padding-left: 44px; }
+  .card-meta .m-author { color: var(--blue); }
+  .card-meta .m-cat    { color: var(--amber); }
+  .card-meta .m-time   { color: #ffffff30; }
+
+  /* Input row */
+  .term-input-row {
+    flex-shrink: 0;
+    display: flex; align-items: center; gap: 0;
+    border-top: 1px solid #ffffff08;
+    background: var(--term-surface);
+    padding: 0;
+  }
+  .input-prompt {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; padding: 14px 16px;
+    white-space: nowrap;
+    border-right: 1px solid #ffffff08;
+    color: #ffffff25;
+  }
+  .input-prompt .p-user { color: var(--green); }
+  .input-prompt .p-host { color: var(--blue); }
+  .input-prompt .p-path { color: var(--mercury); }
+  .input-prompt .p-sym  { color: var(--green); }
+
+  .term-field {
+    flex: 1; background: none; border: none; outline: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; color: var(--white);
+    padding: 14px 16px; letter-spacing: .04em;
+  }
+
+  .cursor-block {
+    width: 9px; height: 16px;
+    background: var(--green);
+    animation: blink .85s step-end infinite;
+    margin-right: 16px; flex-shrink: 0;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* HELP overlay hint */
+  .help-hint {
+    position: absolute; bottom: 56px; right: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .1em;
+    color: #ffffff15;
+    pointer-events: none; z-index: 5;
+  }
+
+  /* Article detail panel (right side when file open) */
+  .detail-panel {
+    width: 380px; flex-shrink: 0;
+    border-left: 1px solid #ffffff08;
+    background: #0a0a0a;
+    overflow-y: auto; overflow-x: hidden;
+    display: none; flex-direction: column;
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff08 transparent;
+  }
+  .detail-panel.open { display: flex; }
+  .detail-panel::-webkit-scrollbar { width: 3px; }
+  .detail-panel::-webkit-scrollbar-thumb { background: #ffffff08; }
+
+  .detail-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #ffffff08;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .18em; color: #ffffff20;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .detail-header span { color: var(--green-dim); }
+  .detail-close {
+    color: #ffffff25; font-size: 18px; cursor: none;
+    background: none; border: none; font-family: inherit;
+    transition: color .15s;
+  }
+  .detail-close:hover { color: #ffffff60; }
+
+  .detail-image {
+    position: relative; height: 200px; overflow: hidden; flex-shrink: 0;
+  }
+  .detail-image img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: grayscale(1) contrast(1.2); mix-blend-mode: luminosity; opacity: .5;
+  }
+  .detail-image::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--blue); mix-blend-mode: multiply; opacity: .75; z-index: 1;
+  }
+  .detail-image::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle, #0f0f0f 1px, transparent 1px);
+    background-size: 5px 5px; opacity: .3; z-index: 2;
+  }
+  .detail-image-label {
+    position: absolute; bottom: 14px; left: 16px; z-index: 3;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .15em; color: #ffffff60; text-transform: uppercase;
+  }
+
+  .detail-body { padding: 20px; font-family: 'Share Tech Mono', monospace; }
+  .detail-cat {
+    font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+    color: var(--amber); margin-bottom: 10px;
+  }
+  .detail-title {
+    font-size: 15px; line-height: 1.45; color: var(--white);
+    margin-bottom: 14px; letter-spacing: .02em;
+  }
+  .detail-excerpt {
+    font-size: 11px; line-height: 1.75; color: #ffffff45;
+    margin-bottom: 20px; letter-spacing: .03em;
+  }
+  .detail-meta { display: flex; flex-direction: column; gap: 6px; margin-bottom: 24px; }
+  .detail-meta-row {
+    display: flex; gap: 8px;
+    font-size: 10px; letter-spacing: .1em;
+  }
+  .detail-meta-row .k { color: #ffffff25; min-width: 60px; }
+  .detail-meta-row .v { color: var(--white); }
+  .detail-meta-row .v.blue { color: var(--blue); }
+  .detail-meta-row .v.green { color: var(--green); }
+
+  .detail-btn {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 12px;
+    border: 1px solid var(--blue);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+    color: var(--blue); background: none; cursor: none;
+    text-decoration: none;
+    transition: background .2s, color .2s;
+    width: 100%;
+  }
+  .detail-btn:hover { background: var(--blue); color: var(--white); }
+
+  .detail-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+  .detail-tag {
+    font-size: 9px; letter-spacing: .15em; text-transform: uppercase;
+    padding: 3px 10px; border: 1px solid #ffffff15;
+    color: #ffffff35;
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="undiscover-home.html" class="nav-logo">
+    UNDISCOVER <span>ARCHIVO</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Música</a></li>
+    <li><a href="#">Tecnología</a></li>
+    <li><a href="#">Cultura</a></li>
+    <li><a href="#" class="active">Archivo</a></li>
+  </ul>
+  <div class="nav-right">
+    <span class="nav-tag">// TERMINAL</span>
+  </div>
+</nav>
+
+<!-- TERMINAL WINDOW -->
+<div class="terminal-window">
+
+  <!-- TITLEBAR -->
+  <div class="titlebar">
+    <div class="dot r"></div>
+    <div class="dot y"></div>
+    <div class="dot g"></div>
+    <span class="titlebar-title">undiscover — archivo@v0.1</span>
+    <div class="titlebar-right">
+      <span>46 archivos</span>
+      <span id="clock">--:--:--</span>
+    </div>
+  </div>
+
+  <!-- SPLIT -->
+  <div class="term-split">
+
+    <!-- SIDEBAR TREE -->
+    <div class="term-sidebar">
+      <div class="sidebar-header">
+        EXPLORADOR <span>46</span>
+      </div>
+      <div class="tree-scroll">
+
+        <!-- Root -->
+        <div class="t-row folder-row" id="root-row" onclick="toggleFolder('root')">
+          <span class="t-icon">▾</span>
+          <span class="t-name">📁 archivo/</span>
+          <span class="t-badge">46</span>
+        </div>
+
+        <div class="t-children" id="tree-root">
+
+          <!-- MÚSICA -->
+          <div class="t-row folder-row" onclick="toggleFolder('musica'); filterCat('musica')">
+            <span class="t-connector">  </span>
+            <span class="t-icon" id="icon-musica">▾</span>
+            <span class="t-name">📂 musica/</span>
+            <span class="t-badge">14</span>
+          </div>
+          <div class="t-children" id="tree-musica">
+            <div class="t-row file-row active" onclick="openFile('mezzanine')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">mezzanine_massive-attack.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('debut')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">debut_bjork.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('parklife')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">parklife_blur.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('jar')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">jar-of-flies_alice-in-chains.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('ok')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">ok-computer_radiohead.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('dummy')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">dummy_portishead.md</span>
+            </div>
+          </div>
+
+          <!-- TECNOLOGÍA -->
+          <div class="t-row folder-row" onclick="toggleFolder('tec'); filterCat('tecnologia')">
+            <span class="t-connector">  </span>
+            <span class="t-icon" id="icon-tec">▸</span>
+            <span class="t-name">📁 tecnologia/</span>
+            <span class="t-badge">11</span>
+          </div>
+          <div class="t-children closed" id="tree-tec">
+            <div class="t-row file-row" onclick="openFile('algoritmo')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">algoritmo-como-curador.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('redes')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">redes-como-archivo-involuntario.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('ia')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">ia-y-autoría-cultural.md</span>
+            </div>
+          </div>
+
+          <!-- CULTURA -->
+          <div class="t-row folder-row" onclick="toggleFolder('cultura'); filterCat('cultura')">
+            <span class="t-connector">  </span>
+            <span class="t-icon" id="icon-cultura">▸</span>
+            <span class="t-name">📁 cultura/</span>
+            <span class="t-badge">12</span>
+          </div>
+          <div class="t-children closed" id="tree-cultura">
+            <div class="t-row file-row" onclick="openFile('nostalgia')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">nostalgia-como-producto.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('zine')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">zine-como-resistencia.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('y2k')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">estetica-y2k-en-2025.md</span>
+            </div>
+          </div>
+
+          <!-- CRÓNICAS -->
+          <div class="t-row folder-row" onclick="toggleFolder('cronicas'); filterCat('cronicas')">
+            <span class="t-connector">  </span>
+            <span class="t-icon" id="icon-cronicas">▸</span>
+            <span class="t-name">📁 cronicas/</span>
+            <span class="t-badge">9</span>
+          </div>
+          <div class="t-children closed" id="tree-cronicas">
+            <div class="t-row file-row" onclick="openFile('conexion')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">primera-conexion-1997.md</span>
+            </div>
+            <div class="t-row file-row" onclick="openFile('disco')">
+              <span class="t-connector">  │  </span>
+              <span class="t-icon">📄</span>
+              <span class="t-name">ultimo-disco-fisico.md</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN OUTPUT -->
+    <div class="term-main">
+
+      <!-- TABS -->
+      <div class="tab-bar">
+        <div class="term-tab active" id="tab-archivo">
+          <span>archivo.sh</span>
+          <span class="tab-close">×</span>
+        </div>
+        <div class="term-tab" id="tab-search" onclick="runSearch()">
+          <span>buscar</span>
+        </div>
+      </div>
+
+      <!-- OUTPUT AREA -->
+      <div class="term-output" id="output">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="help-hint">↑↓ navegar · enter abrir · esc cerrar · ? ayuda</div>
+
+      <!-- INPUT -->
+      <div class="term-input-row">
+        <div class="input-prompt">
+          <span class="p-user">editor</span><span style="color:#ffffff20">@</span><span class="p-host">undiscover</span><span style="color:#ffffff20">:</span><span class="p-path" id="promptPath">~/archivo</span><span class="p-sym">$</span>
+        </div>
+        <input class="term-field" id="termField" placeholder="escribí un comando o buscá un artículo..." spellcheck="false" autocomplete="off">
+        <div class="cursor-block"></div>
+      </div>
+    </div>
+
+    <!-- DETAIL PANEL -->
+    <div class="detail-panel" id="detailPanel">
+      <div class="detail-header">
+        VISTA PREVIA <span id="detailFilename">—</span>
+        <button class="detail-close" onclick="closeDetail()">×</button>
+      </div>
+      <div class="detail-image">
+        <img id="detailImg" src="" alt="">
+        <div class="detail-image-label" id="detailImgLabel"></div>
+      </div>
+      <div class="detail-body">
+        <div class="detail-cat" id="detailCat"></div>
+        <div class="detail-title" id="detailTitle"></div>
+        <div class="detail-excerpt" id="detailExcerpt"></div>
+        <div class="detail-meta" id="detailMeta"></div>
+        <a href="undiscover-articulo.html" class="detail-btn">→ abrir artículo completo</a>
+        <div class="detail-tags" id="detailTags"></div>
+      </div>
+    </div>
+
+  </div><!-- /term-split -->
+</div><!-- /terminal-window -->
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const articles = {
+  mezzanine: {
+    title: 'Mezzanine_ Massive Attack: el disco que capturó la ansiedad de fin de siglo',
+    cat: 'Música', folder: 'musica', author: 'Chazarreta Juan',
+    date: '2025-03-15', time: '12 min', status: 'publicado',
+    excerpt: 'Denso, oscuro y paranoico. Mezzanine captura la ansiedad de finales de los 90 como ningún otro disco. La representación sonora de una red que empezaba a envolverlo todo.',
+    tags: ['trip-hop','años 90','archivo','massive attack'],
+    img: 'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=600&q=80',
+    file: 'mezzanine_massive-attack.md'
+  },
+  debut: {
+    title: 'Debut_ Björk: cuando la electrónica se volvió orgánica',
+    cat: 'Música', folder: 'musica', author: 'Ana Torres',
+    date: '2025-02-20', time: '7 min', status: 'publicado',
+    excerpt: 'El momento en que la electrónica se volvió orgánica. Björk utiliza la tecnología no como herramienta sino como extensión de su identidad.',
+    tags: ['bjork','electrónica','identidad'],
+    img: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
+    file: 'debut_bjork.md'
+  },
+  parklife: {
+    title: 'Parklife_ Blur: un mapa sociológico de los 90',
+    cat: 'Música', folder: 'musica', author: 'Chazarreta Juan',
+    date: '2025-01-10', time: '8 min', status: 'publicado',
+    excerpt: 'Blur no solo lanzó un disco de pop; creó un mapa sociológico de la vida cotidiana británica en plena transición hacia la era posmoderna.',
+    tags: ['blur','britpop','sociología'],
+    img: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80',
+    file: 'parklife_blur.md'
+  },
+  jar: {
+    title: 'Jar of Flies_ Alice in Chains: la melancolía pre-digital',
+    cat: 'Música', folder: 'musica', author: 'M. Rodríguez',
+    date: '2024-12-05', time: '9 min', status: 'publicado',
+    excerpt: 'Grabado en una semana de aislamiento, Jar of Flies se aleja del ruido eléctrico para explorar la soledad desde una crudeza casi analógica.',
+    tags: ['grunge','años 90','melancolía'],
+    img: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80',
+    file: 'jar-of-flies_alice-in-chains.md'
+  },
+  ok: {
+    title: 'OK Computer_ Radiohead: el manual de instrucciones del siglo XXI',
+    cat: 'Música', folder: 'musica', author: 'L. Ferreyra',
+    date: '2024-11-18', time: '14 min', status: 'publicado',
+    excerpt: 'Veintiocho años después, el diagnóstico de Thom Yorke sobre la modernidad sigue siendo el más preciso que haya producido el rock.',
+    tags: ['radiohead','rock alternativo','tecnología'],
+    img: 'https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80',
+    file: 'ok-computer_radiohead.md'
+  },
+  dummy: {
+    title: 'Dummy_ Portishead: el trip-hop como arqueología emocional',
+    cat: 'Música', folder: 'musica', author: 'Ana Torres',
+    date: '2024-10-02', time: '10 min', status: 'publicado',
+    excerpt: 'El debut de Portishead no es un disco de trip-hop: es la banda sonora de una ciudad industrial que sueña en blanco y negro.',
+    tags: ['portishead','trip-hop','nostalgia'],
+    img: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80',
+    file: 'dummy_portishead.md'
+  },
+  algoritmo: {
+    title: 'El algoritmo como curador: ¿quién decide lo que consumimos?',
+    cat: 'Tecnología', folder: 'tecnologia', author: 'L. Ferreyra',
+    date: '2025-02-28', time: '11 min', status: 'publicado',
+    excerpt: 'Los algoritmos de recomendación no son neutros. Son decisiones políticas y culturales empaquetadas como matemática.',
+    tags: ['algoritmos','consumo','cultura digital'],
+    img: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=600&q=80',
+    file: 'algoritmo-como-curador.md'
+  },
+  redes: {
+    title: 'Redes sociales como archivo involuntario de la cultura contemporánea',
+    cat: 'Tecnología', folder: 'tecnologia', author: 'Chazarreta Juan',
+    date: '2025-01-15', time: '9 min', status: 'publicado',
+    excerpt: 'Todo lo que publicamos en redes es un fragmento de archivo. El problema es que no controlamos quién lo conserva ni cómo.',
+    tags: ['redes sociales','archivo','memoria digital'],
+    img: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=600&q=80',
+    file: 'redes-como-archivo-involuntario.md'
+  },
+  nostalgia: {
+    title: 'La nostalgia como producto: Y2K y la industria del recuerdo manufacturado',
+    cat: 'Cultura', folder: 'cultura', author: 'Chazarreta Juan',
+    date: '2025-03-01', time: '15 min', status: 'publicado',
+    excerpt: 'Y2K no es solo una estética: es el síntoma de una industria que convirtió la nostalgia en mercancía y el recuerdo en contenido.',
+    tags: ['Y2K','nostalgia','estética','industria cultural'],
+    img: 'https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&q=80',
+    file: 'nostalgia-como-producto.md'
+  },
+  zine: {
+    title: 'El zine como resistencia: formatos físicos en la era de la sobreinformación',
+    cat: 'Cultura', folder: 'cultura', author: 'Ana Torres',
+    date: '2024-12-20', time: '8 min', status: 'publicado',
+    excerpt: 'Cuando todo es digital y efímero, el papel vuelve como acto político. El zine no es retro: es radical.',
+    tags: ['zine','resistencia','impreso'],
+    img: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=600&q=80',
+    file: 'zine-como-resistencia.md'
+  },
+};
+
+let currentCat = 'all';
+let selectedIdx = 0;
+let filteredList = Object.keys(articles);
+let historyStack = [];
+
+// ── OUTPUT HELPERS ────────────────────────────────────────────────────────
+const out = document.getElementById('output');
+
+function line(content, cls = '', delay = 0) {
+  const d = document.createElement('div');
+  d.className = 'o-line ' + cls;
+  if (delay) d.style.animationDelay = delay + 'ms';
+  d.innerHTML = content;
+  out.appendChild(d);
+  out.scrollTop = out.scrollHeight;
+  return d;
+}
+function spacer() {
+  const d = document.createElement('div');
+  d.className = 'o-spacer';
+  out.appendChild(d);
+}
+function divider() {
+  const d = document.createElement('hr');
+  d.className = 'o-divider';
+  out.appendChild(d);
+}
+function clearOut() { out.innerHTML = ''; selectedIdx = 0; }
+
+function prompt(cmd, path = '~/archivo') {
+  line(`<span class="o-prompt">editor@undiscover</span><span style="color:#ffffff20">:</span><span class="o-path">${path}</span><span class="o-prompt">$</span> <span class="o-cmd">${cmd}</span>`);
+}
+
+// ── RENDER ARTICLES ───────────────────────────────────────────────────────
+function renderList(keys, cmd = 'ls -la') {
+  clearOut();
+  filteredList = keys;
+  prompt(cmd);
+  spacer();
+
+  if (keys.length === 0) {
+    line('<span class="o-error">No se encontraron archivos</span>');
+    spacer();
+    return;
+  }
+
+  line(`<span class="o-dim">total ${keys.length} archivos</span>`);
+  spacer();
+
+  keys.forEach((key, i) => {
+    const a = articles[key];
+    const card = document.createElement('a');
+    card.className = 'o-card o-line' + (i === 0 ? ' active-card' : '');
+    card.href = 'undiscover-articulo.html';
+    card.style.animationDelay = (i * 40) + 'ms';
+    card.dataset.key = key;
+    card.innerHTML = `
+      <div class="card-row">
+        <span class="card-index">${String(i+1).padStart(2,'0')}</span>
+        <span class="card-title">${a.title}</span>
+      </div>
+      <div class="card-meta">
+        <span class="m-author">${a.author}</span>
+        <span class="m-cat">${a.cat}</span>
+        <span class="m-time">${a.time}</span>
+        <span class="m-time">${a.date}</span>
+      </div>`;
+    card.addEventListener('click', e => { e.preventDefault(); openFileByKey(key); });
+    out.appendChild(card);
+    out.scrollTop = out.scrollHeight;
+  });
+
+  spacer();
+  line(`<span class="o-dim">${keys.length} archivo${keys.length!==1?'s':''} · escribí <span style="color:var(--green)">help</span> para ver comandos</span>`);
+
+  if (keys.length > 0) openFileByKey(keys[0]);
+}
+
+// ── DETAIL PANEL ──────────────────────────────────────────────────────────
+function openFileByKey(key) {
+  const a = articles[key];
+  if (!a) return;
+
+  // Highlight in sidebar
+  document.querySelectorAll('.t-row.file-row').forEach(r => r.classList.remove('active'));
+  document.querySelectorAll('.t-row.file-row').forEach(r => {
+    if (r.getAttribute('onclick') && r.getAttribute('onclick').includes(`'${key}'`)) r.classList.add('active');
+  });
+
+  // Highlight card
+  document.querySelectorAll('.o-card').forEach(c => c.classList.remove('active-card'));
+  document.querySelectorAll('.o-card').forEach(c => {
+    if (c.dataset.key === key) c.classList.add('active-card');
+  });
+
+  document.getElementById('detailFilename').textContent = a.file;
+  document.getElementById('detailImg').src = a.img;
+  document.getElementById('detailImgLabel').textContent = '// ' + a.folder + '/' + a.file;
+  document.getElementById('detailCat').textContent = a.cat;
+  document.getElementById('detailTitle').textContent = a.title;
+  document.getElementById('detailExcerpt').textContent = a.excerpt;
+  document.getElementById('detailMeta').innerHTML = `
+    <div class="detail-meta-row"><span class="k">autor</span><span class="v blue">${a.author}</span></div>
+    <div class="detail-meta-row"><span class="k">fecha</span><span class="v">${a.date}</span></div>
+    <div class="detail-meta-row"><span class="k">lectura</span><span class="v">${a.time}</span></div>
+    <div class="detail-meta-row"><span class="k">estado</span><span class="v green">${a.status}</span></div>
+  `;
+  document.getElementById('detailTags').innerHTML = a.tags.map(t=>`<span class="detail-tag">${t}</span>`).join('');
+  document.getElementById('detailPanel').classList.add('open');
+  document.getElementById('promptPath').textContent = `~/archivo/${a.folder}`;
+}
+
+function openFile(key) { openFileByKey(key); }
+
+function closeDetail() {
+  document.getElementById('detailPanel').classList.remove('open');
+}
+
+// ── FOLDER TOGGLE ─────────────────────────────────────────────────────────
+function toggleFolder(name) {
+  const tree = document.getElementById('tree-' + name);
+  const icon = document.getElementById('icon-' + name);
+  if (!tree) return;
+  tree.classList.toggle('closed');
+  if (icon) icon.textContent = tree.classList.contains('closed') ? '▸' : '▾';
+}
+
+// ── FILTER ────────────────────────────────────────────────────────────────
+function filterCat(cat) {
+  currentCat = cat;
+  const catMap = { musica:'Música', tecnologia:'Tecnología', cultura:'Cultura', cronicas:'Crónicas' };
+  const keys = Object.keys(articles).filter(k => {
+    if (cat === 'all') return true;
+    return articles[k].folder === cat;
+  });
+  const label = catMap[cat] || cat;
+  renderList(keys, `ls -la ${cat}/`);
+  document.getElementById('promptPath').textContent = `~/archivo/${cat}`;
+}
+
+// ── COMMANDS ──────────────────────────────────────────────────────────────
+const field = document.getElementById('termField');
+
+const commands = {
+  help() {
+    clearOut();
+    prompt('help');
+    spacer();
+    line('<span class="o-header">COMANDOS DISPONIBLES</span>');
+    spacer();
+    const cmds = [
+      ['ls', 'listar todos los artículos'],
+      ['ls musica', 'listar artículos de música'],
+      ['ls tecnologia', 'listar artículos de tecnología'],
+      ['ls cultura', 'listar artículos de cultura'],
+      ['ls cronicas', 'listar crónicas'],
+      ['grep [término]', 'buscar en el archivo'],
+      ['cat [archivo]', 'abrir artículo'],
+      ['clear', 'limpiar terminal'],
+      ['pwd', 'directorio actual'],
+      ['whoami', 'info del editor'],
+      ['help', 'mostrar esta ayuda'],
+    ];
+    cmds.forEach(([c, d], i) => {
+      line(`<span style="color:var(--green);min-width:200px;display:inline-block">${c.padEnd(22)}</span><span class="o-dim">${d}</span>`, '', i*30);
+    });
+    spacer();
+  },
+  ls(arg) {
+    const catMap = { musica:'musica', tecnologia:'tecnologia', cultura:'cultura', cronicas:'cronicas' };
+    if (arg && catMap[arg]) { filterCat(arg); return; }
+    renderList(Object.keys(articles), 'ls -la');
+  },
+  clear() { clearOut(); boot(); },
+  pwd() {
+    clearOut(); prompt('pwd');
+    spacer();
+    line(`<span class="o-output">/undiscover/archivo/${currentCat === 'all' ? '' : currentCat}</span>`);
+    spacer();
+  },
+  whoami() {
+    clearOut(); prompt('whoami');
+    spacer();
+    line('<span class="o-output">editor@undiscover</span>');
+    line('<span class="o-dim">Resistencia Editorial · Zine Digital · v0.1</span>');
+    spacer();
+  },
+  date() {
+    clearOut(); prompt('date');
+    spacer();
+    line(`<span class="o-output">${new Date().toLocaleDateString('es-AR', {weekday:'long',year:'numeric',month:'long',day:'numeric'})}</span>`);
+    spacer();
+  },
+};
+
+function runSearch() {}
+
+function handleCommand(raw) {
+  const parts = raw.trim().split(/\s+/);
+  const cmd   = parts[0].toLowerCase();
+  const arg   = parts.slice(1).join(' ');
+  historyStack.push(raw);
+
+  if (cmd === 'grep' || cmd === 'buscar' || cmd === 'search') {
+    if (!arg) { line('<span class="o-error">Uso: grep [término]</span>'); return; }
+    const term = arg.toLowerCase();
+    const keys = Object.keys(articles).filter(k => {
+      const a = articles[k];
+      return a.title.toLowerCase().includes(term) ||
+             a.excerpt.toLowerCase().includes(term) ||
+             a.tags.some(t => t.includes(term)) ||
+             a.author.toLowerCase().includes(term);
+    });
+    clearOut();
+    prompt(`grep "${arg}" ./archivo`);
+    spacer();
+    if (keys.length === 0) {
+      line(`<span class="o-error">0 resultados para "${arg}"</span>`);
+      spacer();
+    } else {
+      line(`<span class="o-dim">${keys.length} resultado${keys.length!==1?'s':''} para "<span style="color:var(--amber)">${arg}</span>"</span>`);
+      spacer();
+      renderList(keys, `grep "${arg}" ./archivo`);
+    }
+    return;
+  }
+
+  if (cmd === 'cat') {
+    const key = Object.keys(articles).find(k => articles[k].file.includes(arg) || k === arg);
+    if (key) { openFileByKey(key); return; }
+    line(`<span class="o-error">cat: ${arg}: archivo no encontrado</span>`);
+    return;
+  }
+
+  if (cmd === 'cd') {
+    const catMap = { musica:'musica', tecnologia:'tecnologia', cultura:'cultura', cronicas:'cronicas', '..':'all', '~':'all' };
+    if (catMap[arg] !== undefined) { filterCat(catMap[arg]); return; }
+  }
+
+  if (commands[cmd]) { commands[cmd](arg); return; }
+
+  // Unknown
+  clearOut();
+  prompt(raw);
+  spacer();
+  line(`<span class="o-error">bash: ${cmd}: comando no encontrado</span>`);
+  line(`<span class="o-dim">Escribí <span style="color:var(--green)">help</span> para ver los comandos disponibles</span>`);
+  spacer();
+}
+
+field.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const val = field.value.trim();
+    field.value = '';
+    if (val) handleCommand(val);
+  }
+  // Arrow keys navigate list
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    selectedIdx = Math.min(selectedIdx + 1, filteredList.length - 1);
+    openFileByKey(filteredList[selectedIdx]);
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    selectedIdx = Math.max(selectedIdx - 1, 0);
+    openFileByKey(filteredList[selectedIdx]);
+  }
+  if (e.key === 'Escape') closeDetail();
+});
+
+// ── BOOT SEQUENCE ─────────────────────────────────────────────────────────
+function boot() {
+  const msgs = [
+    { t: 0,   html: '<span class="o-dim">UNDISCOVER ARCHIVO v0.1 — iniciando sistema...</span>' },
+    { t: 180, html: '<span class="o-dim">cargando índice de archivos...</span>' },
+    { t: 320, html: '<span class="o-dim">46 archivos encontrados en 4 directorios</span>' },
+    { t: 460, html: '<span class="o-success">sistema listo ✓</span>' },
+    { t: 600, html: '<span class="o-dim">escribí <span style="color:var(--green)">help</span> para ver los comandos disponibles</span>' },
+  ];
+  msgs.forEach(m => setTimeout(() => line(m.html), m.t));
+  setTimeout(() => {
+    spacer();
+    renderList(Object.keys(articles), 'ls -la');
+  }, 820);
+}
+
+// ── CLOCK ─────────────────────────────────────────────────────────────────
+function updateClock() {
+  const n = new Date();
+  const pad = x => String(x).padStart(2,'0');
+  document.getElementById('clock').textContent = `${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── CURSOR ────────────────────────────────────────────────────────────────
+const cur = document.getElementById('cursor');
+const ring = document.getElementById('cursorRing');
+let mx=0,my=0,rx=0,ry=0;
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cur.style.transform=`translate(${mx-5}px,${my-5}px)`;
+});
+(function animRing(){
+  rx+=(mx-rx-14)*.12; ry+=(my-ry-14)*.12;
+  ring.style.transform=`translate(${rx}px,${ry}px)`;
+  requestAnimationFrame(animRing);
+})();
+document.querySelectorAll('a,button,.t-row,.o-card,.filter-pill').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{ring.style.width='44px';ring.style.height='44px';});
+  el.addEventListener('mouseleave',()=>{ring.style.width='28px';ring.style.height='28px';});
+});
+
+// Focus input on click anywhere
+document.querySelector('.term-main').addEventListener('click', () => field.focus());
+
+// Boot
+boot();
+field.focus();
+</script>
+</body>
+</html>

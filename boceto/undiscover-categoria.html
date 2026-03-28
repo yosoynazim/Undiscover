@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDISCOVER — Archivo / Música</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #1c1c1c;
+    --blue: #2e5bff;
+    --mercury: #99afbf;
+    --white: #f8f9fa;
+    --blue-dark: #1a3acc;
+    --surface: #242424;
+    --surface2: #2a2a2a;
+    --grid: #ffffff08;
+    --terminal-green: #39ff8a;
+    --terminal-bg: #0d0d0d;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  .cursor {
+    width: 12px; height: 12px; background: var(--blue);
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9999;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    transition: transform .08s;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid var(--blue); border-radius: 50%;
+    position: fixed; top: 0; left: 0;
+    pointer-events: none; z-index: 9998;
+    transition: transform .18s, width .15s, height .15s;
+    opacity: .5;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='1'/%3E%3C/svg%3E");
+    opacity: .022; pointer-events: none; z-index: 1000;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 40px;
+    border-bottom: 1px solid #ffffff10;
+    backdrop-filter: blur(12px);
+    background: #1c1c1ccc;
+  }
+  .nav-logo {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 22px; letter-spacing: .08em;
+    color: var(--white); text-decoration: none;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nav-logo span {
+    color: var(--blue); font-size: 11px;
+    border: 1px solid var(--blue); padding: 2px 7px; letter-spacing: .15em;
+  }
+  .nav-links {
+    display: flex; gap: 32px; list-style: none;
+    font-size: 12px; letter-spacing: .12em; text-transform: uppercase;
+  }
+  .nav-links a { color: var(--mercury); text-decoration: none; transition: color .2s; }
+  .nav-links a:hover, .nav-links a.active { color: var(--blue); }
+  .nav-tag {
+    font-family: 'Share Tech Mono', monospace; font-size: 11px;
+    color: var(--blue); border: 1px solid var(--blue);
+    padding: 4px 12px; letter-spacing: .1em;
+  }
+
+  /* PAGE HEADER */
+  .page-header {
+    padding: 120px 40px 48px;
+    border-bottom: 1px solid #ffffff10;
+    position: relative; z-index: 2;
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 40px;
+  }
+  .header-left {}
+  .header-eyebrow {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--blue); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .header-eyebrow::before { content: '//'; opacity: .6; }
+  .page-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(36px, 5vw, 64px);
+    line-height: 1.05; letter-spacing: -.01em;
+    color: var(--white);
+  }
+  .page-title em { color: var(--blue); font-style: normal; }
+  .header-count {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px; color: var(--mercury); margin-top: 14px;
+    letter-spacing: .1em;
+  }
+  .header-count span { color: var(--white); }
+
+  /* FILTER BAR */
+  .filter-bar {
+    padding: 20px 40px;
+    border-bottom: 1px solid #ffffff10;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    position: relative; z-index: 2;
+    background: var(--surface);
+  }
+  .filter-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--mercury); margin-right: 8px;
+  }
+  .filter-pill {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid #ffffff15;
+    color: var(--mercury); cursor: none;
+    transition: all .18s; background: none;
+    position: relative; overflow: hidden;
+  }
+  .filter-pill::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: var(--blue); transform: scaleX(0);
+    transform-origin: left; transition: transform .2s; z-index: -1;
+  }
+  .filter-pill:hover { color: var(--white); border-color: var(--blue); }
+  .filter-pill:hover::before { transform: scaleX(1); }
+  .filter-pill.active {
+    background: var(--blue); border-color: var(--blue); color: var(--white);
+  }
+  .filter-sep { width: 1px; height: 20px; background: #ffffff15; margin: 0 8px; }
+  .sort-select {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+    padding: 6px 14px;
+    background: none; border: 1px solid #ffffff15;
+    color: var(--mercury); cursor: none;
+    outline: none; margin-left: auto;
+  }
+  .sort-select option { background: var(--black); }
+
+  /* MAIN LAYOUT */
+  .main-layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: calc(100vh - 200px);
+    position: relative; z-index: 2;
+  }
+
+  /* ─── TERMINAL ─────────────────────────────────────────── */
+  .terminal-panel {
+    background: var(--terminal-bg);
+    border-right: 1px solid #ffffff10;
+    display: flex; flex-direction: column;
+    font-family: 'Share Tech Mono', monospace;
+    position: sticky; top: 61px;
+    height: calc(100vh - 61px);
+    overflow: hidden;
+  }
+
+  .terminal-titlebar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: #161616;
+    border-bottom: 1px solid #ffffff0a;
+    flex-shrink: 0;
+  }
+  .term-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .term-dot.red   { background: #ff5f57; }
+  .term-dot.yellow{ background: #febc2e; }
+  .term-dot.green { background: #28c840; }
+  .terminal-title {
+    font-size: 11px; letter-spacing: .12em;
+    color: #ffffff40; margin-left: 8px;
+    text-transform: uppercase;
+  }
+
+  .terminal-body {
+    flex: 1; overflow-y: auto; overflow-x: hidden;
+    padding: 16px 0;
+    scrollbar-width: thin;
+    scrollbar-color: #ffffff15 transparent;
+  }
+  .terminal-body::-webkit-scrollbar { width: 4px; }
+  .terminal-body::-webkit-scrollbar-thumb { background: #ffffff15; }
+
+  /* Prompt line */
+  .term-prompt {
+    padding: 4px 16px;
+    font-size: 12px; color: var(--terminal-green);
+    letter-spacing: .05em; line-height: 1.6;
+    white-space: nowrap;
+  }
+  .term-prompt .path { color: var(--blue); }
+  .term-prompt .cmd  { color: var(--white); }
+  .term-output {
+    padding: 2px 16px 12px;
+    font-size: 11px; letter-spacing: .04em; line-height: 1.7;
+  }
+
+  /* Tree */
+  .tree-root { padding: 0; }
+  .tree-item {
+    display: flex; align-items: center;
+    padding: 3px 16px;
+    font-size: 12px; letter-spacing: .04em;
+    line-height: 1.5; cursor: none;
+    transition: background .15s;
+    position: relative;
+  }
+  .tree-item:hover { background: #ffffff06; }
+  .tree-item.active { background: #2e5bff18; }
+
+  .tree-indent { display: flex; align-items: stretch; }
+  .tree-pipe {
+    width: 20px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #ffffff20; font-size: 12px;
+    position: relative;
+  }
+  .tree-pipe::before {
+    content: '│';
+    position: absolute; left: 9px; top: -8px;
+    height: calc(100% + 16px);
+    color: #ffffff15; font-size: 11px;
+    display: block; line-height: 1;
+    pointer-events: none;
+  }
+
+  .tree-branch { color: #ffffff25; font-size: 12px; margin-right: 6px; white-space: pre; }
+  .tree-icon   { margin-right: 7px; font-size: 13px; }
+  .tree-name   { color: var(--white); font-size: 12px; }
+  .tree-name.folder { color: var(--blue); }
+  .tree-name.active-file { color: var(--terminal-green); }
+  .tree-count  {
+    margin-left: auto; font-size: 10px;
+    color: #ffffff30; letter-spacing: .08em;
+  }
+  .tree-item.selected .tree-name { color: var(--terminal-green); }
+  .tree-item.selected { background: #39ff8a10; }
+
+  /* Collapsible */
+  .tree-children { overflow: hidden; max-height: 999px; transition: max-height .3s; }
+  .tree-children.collapsed { max-height: 0; }
+  .toggle-icon { color: #ffffff30; font-size: 10px; margin-left: 4px; transition: transform .2s; }
+  .collapsed-icon .toggle-icon { transform: rotate(-90deg); }
+
+  /* Terminal input line */
+  .terminal-input-row {
+    border-top: 1px solid #ffffff0a;
+    padding: 10px 16px;
+    display: flex; align-items: center; gap: 8px;
+    flex-shrink: 0;
+    background: #161616;
+  }
+  .term-in-prompt { color: var(--terminal-green); font-size: 12px; white-space: nowrap; }
+  .term-input {
+    flex: 1; background: none; border: none; outline: none;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px; color: var(--white); letter-spacing: .05em;
+  }
+  .term-cursor-blink {
+    width: 8px; height: 14px;
+    background: var(--terminal-green);
+    animation: blink .9s step-end infinite;
+    flex-shrink: 0;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ─── ARTICLES PANEL ───────────────────────────────────── */
+  .articles-panel {
+    display: flex; flex-direction: column;
+  }
+
+  /* Category sub-nav */
+  .cat-subnav {
+    padding: 0 40px;
+    border-bottom: 1px solid #ffffff10;
+    display: flex; gap: 0; overflow-x: auto;
+    background: var(--surface);
+  }
+  .cat-tab {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .15em; text-transform: uppercase;
+    padding: 16px 24px;
+    color: var(--mercury);
+    border-bottom: 2px solid transparent;
+    cursor: none; white-space: nowrap;
+    transition: color .2s, border-color .2s;
+    text-decoration: none;
+  }
+  .cat-tab:hover { color: var(--white); }
+  .cat-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* Grid */
+  .articles-grid {
+    padding: 40px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1px;
+    background: #ffffff08;
+    flex: 1;
+  }
+
+  .article-card {
+    background: var(--black);
+    display: flex; flex-direction: column;
+    cursor: none; overflow: hidden;
+    transition: background .2s;
+  }
+  .article-card:hover { background: #202020; }
+
+  .card-image {
+    position: relative; height: 200px; overflow: hidden;
+  }
+  .card-image img {
+    width: 100%; height: 100%; object-fit: cover;
+    filter: grayscale(1) contrast(1.2);
+    mix-blend-mode: luminosity; opacity: .55;
+    transition: transform .5s, opacity .3s;
+  }
+  .article-card:hover .card-image img { transform: scale(1.04); opacity: .7; }
+  .card-image::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--blue); mix-blend-mode: multiply;
+    opacity: .7; z-index: 1; transition: opacity .3s;
+  }
+  .article-card:hover .card-image::before { opacity: .5; }
+  .card-image::after {
+    content: ''; position: absolute; inset: 0;
+    background-image: radial-gradient(circle, var(--black) 1px, transparent 1px);
+    background-size: 5px 5px; opacity: .28; z-index: 2;
+  }
+
+  .card-cat {
+    position: absolute; top: 14px; left: 14px; z-index: 3;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: .18em; text-transform: uppercase;
+    background: var(--blue); color: var(--white); padding: 3px 9px;
+  }
+  .card-num {
+    position: absolute; top: 14px; right: 14px; z-index: 3;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: #ffffff30; letter-spacing: .1em;
+  }
+
+  .card-body { padding: 22px; flex: 1; display: flex; flex-direction: column; }
+  .card-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px; line-height: 1.45; letter-spacing: .02em;
+    color: var(--white); margin-bottom: 10px;
+    transition: color .2s;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .article-card:hover .card-title { color: var(--blue); }
+  .card-excerpt {
+    font-size: 12px; line-height: 1.65; color: var(--mercury);
+    margin-bottom: 18px; flex: 1;
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px; letter-spacing: .1em; color: var(--mercury);
+    text-transform: uppercase; padding-top: 14px;
+    border-top: 1px solid #ffffff08;
+  }
+  .card-author { color: var(--blue); }
+
+  /* FEATURED CARD (spans 2 cols) */
+  .article-card.featured {
+    grid-column: span 2;
+    flex-direction: row;
+  }
+  .article-card.featured .card-image {
+    width: 380px; height: auto; flex-shrink: 0;
+  }
+  .article-card.featured .card-body {
+    padding: 32px;
+  }
+  .article-card.featured .card-title {
+    font-size: 20px; -webkit-line-clamp: 3;
+  }
+  .article-card.featured .card-excerpt {
+    -webkit-line-clamp: 4;
+  }
+
+  /* LOAD MORE */
+  .load-more-row {
+    padding: 40px;
+    display: flex; justify-content: center;
+    border-top: 1px solid #ffffff08;
+  }
+  .btn-load {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+    padding: 14px 40px;
+    border: 1px solid #ffffff20;
+    color: var(--mercury); background: none; cursor: none;
+    transition: all .2s; position: relative; overflow: hidden;
+  }
+  .btn-load::before {
+    content: ''; position: absolute; inset: 0;
+    background: var(--blue); transform: scaleX(0);
+    transform-origin: left; transition: transform .25s; z-index: -1;
+  }
+  .btn-load:hover { color: var(--white); border-color: var(--blue); }
+  .btn-load:hover::before { transform: scaleX(1); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid #ffffff10;
+    padding: 32px 40px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; z-index: 2;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px; color: var(--mercury); letter-spacing: .1em;
+  }
+  footer a { color: var(--blue); text-decoration: none; }
+
+  /* Terminal output fade-in */
+  @keyframes termFade {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .term-line { animation: termFade .3s both; }
+
+  @media (max-width: 900px) {
+    .main-layout { grid-template-columns: 1fr; }
+    .terminal-panel { display: none; }
+    .article-card.featured { grid-column: span 1; flex-direction: column; }
+    .article-card.featured .card-image { width: 100%; height: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="undiscover-home.html" class="nav-logo">
+    UNDISCOVER <span>ARCHIVO</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Música</a></li>
+    <li><a href="#">Tecnología</a></li>
+    <li><a href="#">Cultura</a></li>
+    <li><a href="#">Crónicas</a></li>
+  </ul>
+  <div class="nav-tag">// ZINE DIGITAL</div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="header-left">
+    <div class="header-eyebrow">Categoría</div>
+    <h1 class="page-title">Archivo<br><em>Música</em></h1>
+    <div class="header-count"><span>14</span> entradas archivadas</div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Filtrar:</span>
+  <button class="filter-pill active">Todo</button>
+  <button class="filter-pill">Crónica</button>
+  <button class="filter-pill">Ensayo</button>
+  <button class="filter-pill">Entrevista</button>
+  <button class="filter-pill">Reseña</button>
+  <div class="filter-sep"></div>
+  <select class="sort-select">
+    <option>Más recientes</option>
+    <option>Más antiguos</option>
+    <option>Más leídos</option>
+  </select>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="main-layout">
+
+  <!-- ── TERMINAL ── -->
+  <div class="terminal-panel">
+    <div class="terminal-titlebar">
+      <div class="term-dot red"></div>
+      <div class="term-dot yellow"></div>
+      <div class="term-dot green"></div>
+      <span class="terminal-title">undiscover — archivo</span>
+    </div>
+
+    <div class="terminal-body" id="termBody">
+      <div class="term-prompt term-line" style="animation-delay:.05s">
+        <span class="path">undiscover@archivo:~$</span>
+        <span class="cmd"> ls -la</span>
+      </div>
+      <div class="term-output term-line" style="animation-delay:.2s;color:#ffffff40;font-size:11px;">
+        total 14 archivos · última actualización: mar 2025
+      </div>
+
+      <div class="term-prompt term-line" style="animation-delay:.4s;margin-top:8px;">
+        <span class="path">undiscover@archivo:~$</span>
+        <span class="cmd"> tree ./archivo</span>
+      </div>
+
+      <div class="tree-root term-line" style="animation-delay:.6s;padding:8px 0 4px;">
+
+        <!-- Root -->
+        <div class="tree-item" style="padding-left:16px;">
+          <span class="tree-icon" style="color:var(--blue)">📁</span>
+          <span class="tree-name folder">archivo/</span>
+          <span class="tree-count">46</span>
+          <span class="toggle-icon" style="margin-left:8px;color:#ffffff30;font-size:10px">▾</span>
+        </div>
+
+        <!-- Música — ACTIVE -->
+        <div class="tree-children" id="folder-musica">
+          <div class="tree-item selected" onclick="selectFolder('musica')" style="padding-left:16px;">
+            <span class="tree-pipe">│</span>
+            <span class="tree-branch">├─ </span>
+            <span class="tree-icon">📂</span>
+            <span class="tree-name active-file">musica/</span>
+            <span class="tree-count">14</span>
+          </div>
+
+          <div class="tree-children" id="children-musica">
+            <div class="tree-item" onclick="selectFile('mezzanine')" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  ├─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:var(--terminal-green)">mezzanine_massive-attack.md</span>
+            </div>
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  ├─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">debut_bjork.md</span>
+            </div>
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  ├─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">parklife_blur.md</span>
+            </div>
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  └─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">jar-of-flies_alice-in-chains.md</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tecnología -->
+        <div class="tree-children">
+          <div class="tree-item" onclick="selectFolder('tecnologia')" style="padding-left:16px;">
+            <span class="tree-pipe">│</span>
+            <span class="tree-branch">├─ </span>
+            <span class="tree-icon">📁</span>
+            <span class="tree-name folder">tecnologia/</span>
+            <span class="tree-count">11</span>
+            <span class="toggle-icon" id="toggle-tecnologia" style="margin-left:8px;color:#ffffff30;font-size:10px">▾</span>
+          </div>
+          <div class="tree-children collapsed" id="children-tecnologia">
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  ├─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">algoritmo-como-curador.md</span>
+            </div>
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  └─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">redes-como-archivo.md</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cultura -->
+        <div class="tree-children">
+          <div class="tree-item" onclick="selectFolder('cultura')" style="padding-left:16px;">
+            <span class="tree-pipe">│</span>
+            <span class="tree-branch">├─ </span>
+            <span class="tree-icon">📁</span>
+            <span class="tree-name folder">cultura/</span>
+            <span class="tree-count">12</span>
+            <span class="toggle-icon" id="toggle-cultura" style="margin-left:8px;color:#ffffff30;font-size:10px">▾</span>
+          </div>
+          <div class="tree-children collapsed" id="children-cultura">
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  ├─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">nostalgia-como-producto.md</span>
+            </div>
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe">│</span><span class="tree-pipe"></span>
+              <span class="tree-branch">│  └─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">zine-como-resistencia.md</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Crónicas -->
+        <div class="tree-children">
+          <div class="tree-item" onclick="selectFolder('cronicas')" style="padding-left:16px;">
+            <span class="tree-pipe">│</span>
+            <span class="tree-branch">└─ </span>
+            <span class="tree-icon">📁</span>
+            <span class="tree-name folder">cronicas/</span>
+            <span class="tree-count">9</span>
+            <span class="toggle-icon" id="toggle-cronicas" style="margin-left:8px;color:#ffffff30;font-size:10px">▾</span>
+          </div>
+          <div class="tree-children collapsed" id="children-cronicas">
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe"></span><span class="tree-pipe"></span>
+              <span class="tree-branch">   ├─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">primera-conexion-1997.md</span>
+            </div>
+            <div class="tree-item" style="padding-left:16px;">
+              <span class="tree-pipe"></span><span class="tree-pipe"></span>
+              <span class="tree-branch">   └─ </span>
+              <span class="tree-icon" style="font-size:11px">📄</span>
+              <span class="tree-name" style="font-size:11px;color:#ffffff60">ultimo-disco-fisico.md</span>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /tree-root -->
+
+      <!-- Output after tree -->
+      <div class="term-output term-line" style="animation-delay:.9s;color:#ffffff25;font-size:11px;margin-top:8px;padding-top:8px;border-top:1px solid #ffffff08;">
+        46 archivos en 4 directorios
+      </div>
+
+      <!-- Current file info -->
+      <div style="margin-top:16px;padding:0 16px;" class="term-line" style="animation-delay:1.1s">
+        <div style="font-size:10px;letter-spacing:.15em;color:var(--blue);text-transform:uppercase;margin-bottom:8px">// archivo activo</div>
+        <div id="activeFile" style="font-size:11px;color:var(--terminal-green);line-height:1.7">
+          musica/mezzanine_massive-attack.md<br>
+          <span style="color:#ffffff40">autor: Chazarreta Juan</span><br>
+          <span style="color:#ffffff40">fecha: 2025-03-15</span><br>
+          <span style="color:#ffffff40">tiempo: 12 min</span>
+        </div>
+      </div>
+
+    </div><!-- /terminal-body -->
+
+    <div class="terminal-input-row">
+      <span class="term-in-prompt">undiscover@archivo:~/musica$</span>
+      <input class="term-input" id="termInput" placeholder="cat archivo.md" spellcheck="false" autocomplete="off">
+      <div class="term-cursor-blink"></div>
+    </div>
+  </div>
+
+  <!-- ── ARTICLES ── -->
+  <div class="articles-panel">
+
+    <div class="cat-subnav">
+      <a href="#" class="cat-tab active">Música</a>
+      <a href="#" class="cat-tab">Tecnología</a>
+      <a href="#" class="cat-tab">Cultura</a>
+      <a href="#" class="cat-tab">Crónicas</a>
+      <a href="#" class="cat-tab">Ensayo</a>
+    </div>
+
+    <div class="articles-grid">
+
+      <!-- Featured -->
+      <div class="article-card featured">
+        <div class="card-image">
+          <span class="card-cat">Música</span>
+          <span class="card-num">01</span>
+          <img src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=800&q=80" alt="">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Mezzanine_ Massive Attack: el disco que capturó la ansiedad de fin de siglo</div>
+          <div class="card-excerpt">Denso, oscuro y paranoico. Mezzanine captura la ansiedad de finales de los 90 como ningún otro disco. Es la representación sonora de una red que empezaba a envolverlo todo: un viaje de dub y oscuridad que se siente tan relevante hoy como el día en que se archivó por primera vez.</div>
+          <div class="card-footer">
+            <span class="card-author">Chazarreta Juan</span>
+            <span>12 MIN · MAR 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards -->
+      <div class="article-card">
+        <div class="card-image">
+          <span class="card-cat">Música</span>
+          <span class="card-num">02</span>
+          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80" alt="">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Debut_ Björk: cuando la electrónica se volvió orgánica</div>
+          <div class="card-excerpt">El momento en que la electrónica se volvió orgánica. Björk utiliza la tecnología no como una herramienta, sino como una extensión de su propia identidad.</div>
+          <div class="card-footer">
+            <span class="card-author">Ana Torres</span>
+            <span>7 MIN · FEB 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="card-image">
+          <span class="card-cat">Música</span>
+          <span class="card-num">03</span>
+          <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&q=80" alt="">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Parklife_ Blur: un mapa sociológico de los 90</div>
+          <div class="card-excerpt">Blur no solo lanzó un disco de pop; creó un mapa sociológico de la vida cotidiana británica en plena transición hacia la era posmoderna.</div>
+          <div class="card-footer">
+            <span class="card-author">Chazarreta Juan</span>
+            <span>8 MIN · ENE 2025</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="card-image">
+          <span class="card-cat">Música</span>
+          <span class="card-num">04</span>
+          <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=80" alt="">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Jar of Flies_ Alice in Chains: la melancolía pre-digital</div>
+          <div class="card-excerpt">Grabado en una semana de aislamiento, Jar of Flies se aleja del ruido eléctrico para explorar la soledad desde una crudeza casi analógica.</div>
+          <div class="card-footer">
+            <span class="card-author">M. Rodríguez</span>
+            <span>9 MIN · DIC 2024</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="card-image">
+          <span class="card-cat">Música</span>
+          <span class="card-num">05</span>
+          <img src="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=600&q=80" alt="">
+        </div>
+        <div class="card-body">
+          <div class="card-title">OK Computer_ Radiohead: el manual de instrucciones del siglo XXI</div>
+          <div class="card-excerpt">Veintiocho años después, el diagnóstico que Thom Yorke y compañía hicieron de la modernidad sigue siendo el más preciso que haya producido el rock.</div>
+          <div class="card-footer">
+            <span class="card-author">L. Ferreyra</span>
+            <span>14 MIN · NOV 2024</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="article-card">
+        <div class="card-image">
+          <span class="card-cat">Música</span>
+          <span class="card-num">06</span>
+          <img src="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=80" alt="">
+        </div>
+        <div class="card-body">
+          <div class="card-title">Dummy_ Portishead: el trip-hop como arqueología emocional</div>
+          <div class="card-excerpt">El debut de Portishead no es un disco de trip-hop: es la banda sonora de una ciudad industrial que sueña en blanco y negro.</div>
+          <div class="card-footer">
+            <span class="card-author">Ana Torres</span>
+            <span>10 MIN · OCT 2024</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="load-more-row">
+      <button class="btn-load">// cargar más archivos</button>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <span>UNDISCOVER © 2025 — Resistencia Editorial</span>
+  <span>Zine Digital · <a href="#">Instagram</a> · <a href="#">Newsletter</a></span>
+  <span style="font-size:10px;opacity:.4">v0.1 // ARCHIVO EN CONSTRUCCIÓN</span>
+</footer>
+
+<script>
+  // Cursor
+  const cursor = document.getElementById('cursor');
+  const ring   = document.getElementById('cursorRing');
+  let mx=0,my=0,rx=0,ry=0;
+  document.addEventListener('mousemove', e => {
+    mx=e.clientX; my=e.clientY;
+    cursor.style.transform=`translate(${mx-6}px,${my-6}px)`;
+  });
+  (function animRing(){
+    rx+=(mx-rx-18)*.12; ry+=(my-ry-18)*.12;
+    ring.style.transform=`translate(${rx}px,${ry}px)`;
+    requestAnimationFrame(animRing);
+  })();
+  document.querySelectorAll('a,button,.article-card,.tree-item,.filter-pill').forEach(el=>{
+    el.addEventListener('mouseenter',()=>{ring.style.width='50px';ring.style.height='50px';});
+    el.addEventListener('mouseleave',()=>{ring.style.width='36px';ring.style.height='36px';});
+  });
+
+  // Filter pills
+  document.querySelectorAll('.filter-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  // Terminal folder toggle
+  function selectFolder(name) {
+    const children = document.getElementById('children-' + name);
+    const toggle   = document.getElementById('toggle-' + name);
+    if (!children) return;
+    children.classList.toggle('collapsed');
+    if (toggle) toggle.style.transform = children.classList.contains('collapsed') ? 'rotate(-90deg)' : '';
+  }
+
+  function selectFile(name) {
+    // highlight active file in terminal
+    document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+  }
+
+  // Terminal input — fake responses
+  const termInput = document.getElementById('termInput');
+  const termBody  = document.getElementById('termBody');
+
+  termInput.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const cmd = termInput.value.trim();
+    termInput.value = '';
+    if (!cmd) return;
+
+    const responses = {
+      'ls':       ['musica/  tecnologia/  cultura/  cronicas/', '46 archivos en 4 directorios'],
+      'help':     ['Comandos disponibles:', 'ls · cd [carpeta] · cat [archivo] · grep [término] · clear'],
+      'clear':    null,
+      'pwd':      ['/undiscover/archivo'],
+      'whoami':   ['editor@undiscover'],
+      'date':     [new Date().toLocaleDateString('es-AR', {weekday:'long',year:'numeric',month:'long',day:'numeric'})],
+    };
+
+    // Echo command
+    const echoEl = document.createElement('div');
+    echoEl.className = 'term-prompt term-line';
+    echoEl.innerHTML = `<span class="path">undiscover@archivo:~$</span> <span class="cmd">${cmd}</span>`;
+    termBody.appendChild(echoEl);
+
+    if (cmd === 'clear') {
+      termBody.innerHTML = '';
+      return;
+    }
+
+    const baseCmd = cmd.split(' ')[0];
+    const output  = responses[baseCmd] || [`bash: ${cmd}: comando no encontrado`, `Intentá 'help' para ver los comandos`];
+
+    output.forEach((line, i) => {
+      const el = document.createElement('div');
+      el.className = 'term-output term-line';
+      el.style.animationDelay = (i * .08) + 's';
+      el.style.color = '#ffffff60';
+      el.style.fontSize = '11px';
+      el.textContent = line;
+      termBody.appendChild(el);
+    });
+
+    termBody.scrollTop = termBody.scrollHeight;
+  });
+</script>
+</body>
+</html>
