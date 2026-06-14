@@ -16,14 +16,15 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function AuthorPage({ params }: { params: { slug: string } }) {
+export default async function AuthorPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   let author: Author | null = null
   let articles: Article[] = []
 
   try {
     ;[author, articles] = await Promise.all([
-      getAuthorBySlug(params.slug),
-      getArticlesByAuthor(params.slug),
+      getAuthorBySlug(slug),
+      getArticlesByAuthor(slug),
     ])
   } catch {}
 

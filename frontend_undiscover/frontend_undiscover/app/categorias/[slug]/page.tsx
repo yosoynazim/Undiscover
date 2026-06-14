@@ -13,17 +13,18 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function CategoryPage({ params }: { params: { slug: string } }) {
+export default async function CategoryPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   let articles: Article[] = []
   let categories: Category[] = []
   let current: Category | undefined
 
   try {
     ;[articles, categories] = await Promise.all([
-      getArticlesByCategory(params.slug),
+      getArticlesByCategory(slug),
       getCategories(),
     ])
-    current = categories.find((c) => c.slug === params.slug)
+    current = categories.find((c) => c.slug === slug)
   } catch {}
 
   if (!current) notFound()
@@ -65,11 +66,11 @@ export default async function CategoryPage({ params }: { params: { slug: string 
             key={cat.id}
             href={`/categorias/${cat.slug}`}
             className={`font-mono text-[11px] tracking-[.15em] uppercase px-4 py-2 border transition-colors no-underline ${
-              cat.slug === params.slug
+              cat.slug === slug
                 ? 'text-white border-transparent'
                 : 'border-white/20 text-[#99afbf] hover:text-white hover:border-transparent'
             }`}
-            style={cat.slug === params.slug ? { background: 'linear-gradient(135deg, #2e5bff, #ff2d8f)' } : undefined}
+            style={cat.slug === slug ? { background: 'linear-gradient(135deg, #2e5bff, #ff2d8f)' } : undefined}
           >
             {cat.name}
           </a>

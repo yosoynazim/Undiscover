@@ -16,10 +16,11 @@ export async function generateStaticParams() {
   }
 }
 
-export default async function ArticlePage({ params }: { params: { slug: string } }) {
+export default async function ArticlePage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
   let article: Article | null = null
   try {
-    article = await getArticleBySlug(params.slug)
+    article = await getArticleBySlug(slug)
   } catch {}
 
   if (!article) notFound()

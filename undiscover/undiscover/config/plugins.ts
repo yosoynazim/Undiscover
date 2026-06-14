@@ -1,16 +1,20 @@
 import type { Core } from '@strapi/strapi';
 
-const config = (_: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
+const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Plugin => ({
   email: {
     config: {
       provider: 'nodemailer',
       providerOptions: {
-        // jsonTransport: no envía nada, solo loguea. Reemplazar por SMTP real cuando haya dominio.
-        jsonTransport: true,
+        host: 'smtp.resend.com',
+        port: 587,
+        auth: {
+          user: 'resend',
+          pass: env('RESEND_API_KEY'),
+        },
       },
       settings: {
-        defaultFrom: 'noreply@undiscover.com.ar',
-        defaultReplyTo: 'noreply@undiscover.com.ar',
+        defaultFrom: env('EMAIL_FROM', 'noreply@undiscover.com.ar'),
+        defaultReplyTo: env('EMAIL_FROM', 'noreply@undiscover.com.ar'),
       },
     },
   },
