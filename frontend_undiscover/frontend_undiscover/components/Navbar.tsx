@@ -1,0 +1,100 @@
+'use client'
+
+import Link from 'next/link'
+import Image from 'next/image'
+import { usePathname } from 'next/navigation'
+import { useAuth } from '@/contexts/AuthContext'
+
+const links = [
+  { label: 'Archivo', href: '/archivo' },
+]
+
+function getInitials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+}
+
+export default function Navbar() {
+  const pathname = usePathname()
+  const { user, logout, openAuthModal } = useAuth()
+
+  return (
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-4 border-b border-white/[.07] backdrop-blur-md bg-[#0d0d14]/85">
+
+      {/* Logo */}
+      <Link href="/" className="flex items-center no-underline">
+        <Image
+          src="/logo.png"
+          alt="Undiscover"
+          width={140}
+          height={36}
+          className="h-9 w-auto"
+          style={{ filter: 'invert(1) brightness(2)', mixBlendMode: 'screen', opacity: 0.9 }}
+          priority
+        />
+      </Link>
+
+      {/* Links */}
+      <ul className="flex gap-8 list-none">
+        {links.map(({ label, href }) => {
+          const active = pathname.startsWith(href)
+          return (
+            <li key={href}>
+              <Link
+                href={href}
+                className={`font-mono text-[11px] tracking-[.18em] uppercase transition-colors duration-200 no-underline ${
+                  active ? 'text-[#2e5bff]' : 'text-[#99afbf] hover:text-white'
+                }`}
+              >
+                {label}
+              </Link>
+            </li>
+          )
+        })}
+      </ul>
+
+      {/* Derecha */}
+      <div className="flex items-center gap-4">
+        {/* ON AIR */}
+        <span className="font-mono text-[10px] tracking-[.15em] uppercase text-[#99afbf]/50 flex items-center gap-1.5">
+          <span style={{ color: '#ff2d8f', animation: 'on-air-blink 1.2s ease-in-out infinite' }}>●</span>
+          EN VIVO
+        </span>
+
+        {/* Tag */}
+        <span className="font-mono text-[11px] tracking-widest">
+          <span style={{ color: '#2e5bff' }}>//</span>
+          {' '}
+          <span style={{ background: 'linear-gradient(90deg, #2e5bff, #ff2d8f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ZINE DIGITAL</span>
+        </span>
+
+        {/* Auth */}
+        {user ? (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full flex items-center justify-center grad-bg font-mono text-[10px] text-white tracking-[.04em]">
+                {getInitials(user.username)}
+              </div>
+              <span className="font-mono text-[11px] text-[#99afbf] tracking-[.08em]">
+                {user.username}
+              </span>
+            </div>
+            <button
+              onClick={logout}
+              className="font-mono text-[10px] tracking-[.15em] uppercase text-white/25 hover:text-white/60 transition-colors bg-transparent border-none p-0"
+            >
+              salir
+            </button>
+          </>
+        ) : (
+          <button
+            onClick={openAuthModal}
+            className="font-mono text-[11px] tracking-[.12em] uppercase px-4 py-1.5 border border-[#ff2d8f] text-[#ff2d8f] bg-transparent hover:bg-[#ff2d8f] hover:text-white transition-colors"
+          >
+            Ingresar
+          </button>
+        )}
+      </div>
+
+    </nav>
+  )
+}

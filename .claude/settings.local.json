@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make --version)",
+      "Bash(g++ --version)",
+      "Bash(npm view:*)",
+      "Bash(python3 -c \"import sys,json; v=json.load\\(sys.stdin\\); print\\('\\\\n'.join\\([x for x in v if x.startswith\\('9.'\\)]\\)\\)\")",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(grep -rn \"loadAPIs\\\\|loadApi\" /home/aaraya0/Documentos/Undiscover/undiscover/undiscover/node_modules/@strapi/core/dist/*.js)",
+      "Bash(grep -rn \"loaders/apis\\\\|loadAPIs\\\\|apis.js\" /home/aaraya0/Documentos/Undiscover/undiscover/undiscover/node_modules/@strapi/core/dist/*.js)",
+      "Bash(grep -rn \"apis.*add\\\\|get.*apis.*add\\\\|apisReg\\\\|api.*register\\\\|loadAPI\" /home/aaraya0/Documentos/Undiscover/undiscover/undiscover/node_modules/@strapi/core/dist/*.js)",
+      "Bash(node scripts/develop.js)",
+      "Bash(curl -s http://localhost:1337/api/articles)",
+      "Bash(pkill -f \"strapi start\")",
+      "Bash(pkill -f \"node scripts/develop\")",
+      "Bash(node_modules/.bin/tsc --skipLibCheck)",
+      "Bash(node_modules/.bin/next --version)",
+      "Bash(node_modules/.bin/tsc --skipLibCheck --noEmit false --noEmitOnError false)",
+      "Bash(pkill -f \"develop.js\")",
+      "Bash(echo \"PID: $!\")",
+      "Bash(curl -s http://localhost:1337/_health)",
+      "Read(//tmp/**)",
+      "Bash(echo \"EXIT: $?\")"
+    ]
+  }
+}

@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UNDISCOVER — Voidcore</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+:root {
+  --void:    #020208;
+  --deep:    #06060f;
+  --surface: #09090f;
+  --card:    #0b0b14;
+  --blue:    #1e3cff;
+  --blue-dim:#0a1866;
+  --white:   #c8ccdd;
+  --dim:     rgba(200,204,221,.35);
+  --faint:   rgba(200,204,221,.12);
+  --border:  rgba(255,255,255,.05);
+  --border2: rgba(30,60,255,.18);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--void);
+  color: var(--white);
+  font-family: 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+}
+
+/* ── VOID TEXTURES ──────────────────────────────────── */
+.noise {
+  position: fixed; inset: 0; z-index: 1000; pointer-events: none;
+  opacity: .06;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.grid-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(30,60,255,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30,60,255,.025) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+/* Deep vignette — void pulls from edges */
+.vignette {
+  position: fixed; inset: 0; z-index: 999; pointer-events: none;
+  background: radial-gradient(ellipse 90% 90% at 50% 50%, transparent 40%, rgba(2,2,8,.85) 100%);
+}
+/* Scanline global */
+.scanlines {
+  position: fixed; inset: 0; z-index: 998; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,.08) 3px, rgba(0,0,0,.08) 4px
+  );
+}
+
+/* ── CURSOR ─────────────────────────────────────────── */
+.cursor {
+  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;
+  width: 8px; height: 8px;
+  background: var(--blue);
+  clip-path: polygon(50% 0%,100% 50%,50% 100%,0% 50%);
+  transform: translate(-50%,-50%);
+  opacity: .7;
+}
+.cursor-ring {
+  position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9998;
+  width: 28px; height: 28px;
+  border: 1px solid var(--blue);
+  border-radius: 50%;
+  transform: translate(-50%,-50%);
+  opacity: .15;
+  transition: width .2s, height .2s;
+}
+
+/* ── NAV ─────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 40px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(2,2,8,.92);
+  backdrop-filter: blur(20px);
+}
+
+.nav-logo {
+  display: flex; align-items: center; gap: 12px;
+  text-decoration: none;
+}
+.nav-logo img {
+  height: 30px;
+  /* emerge del vacío: blanco muy tenue */
+  filter: invert(1) brightness(10) opacity(.55);
+  transition: opacity .3s, filter .3s;
+}
+.nav-logo img:hover {
+  opacity: .9;
+  filter: invert(1) brightness(1.5) sepia(1) hue-rotate(200deg) saturate(10) brightness(2);
+}
+
+.nav-links {
+  display: flex; gap: 32px; list-style: none;
+}
+.nav-links a {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--faint); text-decoration: none;
+  transition: color .3s;
+}
+.nav-links a:hover { color: var(--dim); }
+
+.nav-right { display: flex; align-items: center; gap: 14px; }
+
+.nav-coord {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .12em;
+  color: rgba(30,60,255,.4);
+}
+
+.btn-void {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  padding: 5px 14px;
+  border: 1px solid rgba(30,60,255,.25);
+  color: rgba(30,60,255,.6);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color .3s, color .3s, background .3s;
+}
+.btn-void:hover {
+  border-color: var(--blue);
+  color: var(--white);
+  background: rgba(30,60,255,.08);
+}
+
+/* ── HERO ─────────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  overflow: hidden;
+  padding-top: 65px;
+}
+
+/* Void ambient glow — barely there */
+.hero::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 50% 70% at 65% 50%, rgba(30,60,255,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 30% 40% at 20% 60%, rgba(10,24,102,.1) 0%, transparent 60%);
+}
+
+.hero-left {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 0 56px 80px;
+}
+
+.hero-eyebrow {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .3em; text-transform: uppercase;
+  color: rgba(30,60,255,.5);
+  margin-bottom: 28px;
+}
+.hero-eyebrow::before { content:''; width:20px; height:1px; background: rgba(30,60,255,.4); }
+
+/* Glitch title */
+.hero-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: clamp(42px, 5.5vw, 74px);
+  line-height: 1.04;
+  letter-spacing: -.01em;
+  color: var(--white);
+  margin-bottom: 32px;
+  position: relative;
+}
+.hero-title .void-line {
+  display: block;
+  color: rgba(200,204,221,.15);
+  font-size: .55em;
+  letter-spacing: .08em;
+  margin-bottom: 6px;
+}
+.hero-title .glitch {
+  position: relative;
+  display: inline-block;
+}
+.hero-title .glitch::before,
+.hero-title .glitch::after {
+  content: attr(data-text);
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+.hero-title .glitch::before {
+  color: rgba(30,60,255,.5);
+  animation: glitch-1 4s infinite;
+  clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%);
+}
+.hero-title .glitch::after {
+  color: rgba(200,204,221,.2);
+  animation: glitch-2 4s infinite;
+  clip-path: polygon(0 60%, 100% 60%, 100% 75%, 0 75%);
+}
+@keyframes glitch-1 {
+  0%,95%,100% { transform: none; opacity: 0; }
+  96%          { transform: translate(-3px, 1px); opacity: 1; }
+  97%          { transform: translate(3px, -1px); opacity: 1; }
+  98%          { transform: translate(-1px, 2px); opacity: 0; }
+}
+@keyframes glitch-2 {
+  0%,92%,100% { transform: none; opacity: 0; }
+  93%          { transform: translate(2px, -2px); opacity: 1; }
+  94%          { transform: translate(-2px, 1px); opacity: 1; }
+  95%          { transform: none; opacity: 0; }
+}
+
+.hero-excerpt {
+  font-size: 15px; line-height: 1.75;
+  color: var(--dim);
+  max-width: 400px; margin-bottom: 44px;
+}
+
+.hero-meta {
+  display: flex; align-items: center; gap: 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .15em; text-transform: uppercase;
+  color: var(--faint);
+  margin-bottom: 40px;
+}
+.hero-meta .m-blue { color: rgba(30,60,255,.6); }
+
+.btn-void-cta {
+  display: inline-flex; align-items: center; gap: 12px;
+  border: 1px solid rgba(30,60,255,.3);
+  color: rgba(200,204,221,.6);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase;
+  padding: 13px 28px;
+  text-decoration: none;
+  width: fit-content;
+  position: relative; overflow: hidden;
+  transition: color .3s, border-color .4s;
+}
+.btn-void-cta::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(30,60,255,.06);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform .4s;
+}
+.btn-void-cta:hover { color: var(--white); border-color: rgba(30,60,255,.6); }
+.btn-void-cta:hover::before { transform: scaleX(1); }
+.btn-void-cta::after { content: '→'; opacity: .5; }
+
+/* Coordinates floating */
+.coord {
+  position: absolute;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: .12em;
+  color: rgba(30,60,255,.2);
+  pointer-events: none;
+}
+.coord-1 { bottom: 80px; left: 56px; }
+.coord-2 { top: 120px; right: 24px; writing-mode: vertical-rl; }
+
+/* ── HERO RIGHT (image) ───────────────────────────────── */
+.hero-right {
+  position: relative; overflow: hidden; z-index: 5;
+}
+.hero-right img.cover {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(1) contrast(1.1) brightness(.4);
+  mix-blend-mode: luminosity;
+  opacity: .35;
+}
+.hero-right .overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(2,2,8,.3) 0%, rgba(10,18,80,.5) 50%, rgba(2,2,8,.2) 100%);
+  mix-blend-mode: multiply; z-index: 1;
+}
+.hero-right .halftone {
+  position: absolute; inset: 0; z-index: 2; opacity: .15;
+  background-image: radial-gradient(circle, rgba(200,204,221,.3) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+/* Very slow scanline */
+.hero-right .scanline {
+  position: absolute; left: 0; right: 0; height: 1px; z-index: 3;
+  background: linear-gradient(transparent, rgba(30,60,255,.4), transparent);
+  animation: scan 10s linear infinite;
+  opacity: .4;
+}
+@keyframes scan { from { top: -2px; } to { top: 100%; } }
+
+.hero-right .label {
+  position: absolute; bottom: 40px; left: 28px; z-index: 10;
+}
+.hero-right .label .cat {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .25em; text-transform: uppercase;
+  color: rgba(30,60,255,.4);
+  margin-bottom: 6px;
+}
+.hero-right .label .author {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 22px; letter-spacing: .04em;
+  color: rgba(200,204,221,.3);
+}
+.hero-right .num {
+  position: absolute; top: 80px; right: 28px; z-index: 10;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 130px; line-height: 1;
+  color: rgba(30,60,255,.03);
+  pointer-events: none; user-select: none;
+}
+/* Vertical line divider */
+.hero-right::before {
+  content: '';
+  position: absolute; left: 0; top: 10%; bottom: 10%;
+  width: 1px;
+  background: linear-gradient(transparent, rgba(30,60,255,.15), transparent);
+  z-index: 20;
+}
+
+/* ── TICKER ─────────────────────────────────────────── */
+.ticker-wrap {
+  position: relative; overflow: hidden;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 0;
+  z-index: 10;
+  background: rgba(6,6,15,.8);
+}
+.ticker-wrap::before, .ticker-wrap::after {
+  content:''; position:absolute; top:0; bottom:0; width:100px; z-index:2; pointer-events:none;
+}
+.ticker-wrap::before { left:0; background: linear-gradient(to right, var(--void), transparent); }
+.ticker-wrap::after  { right:0; background: linear-gradient(to left, var(--void), transparent); }
+
+.ticker-track {
+  display: flex; white-space: nowrap;
+  animation: ticker 30s linear infinite;
+}
+@keyframes ticker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+.ticker-item {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .25em; text-transform: uppercase;
+  padding: 0 32px;
+  color: rgba(200,204,221,.12);
+  display: inline-flex; align-items: center; gap: 32px;
+}
+.ticker-item::after { content: '//'; font-size: 8px; opacity: .4; }
+.ticker-item.accent { color: rgba(30,60,255,.35); }
+
+/* ── SECTION HEADER ─────────────────────────────────── */
+.section-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 72px 40px 28px;
+  border-bottom: 1px solid var(--border);
+  position: relative; z-index: 10;
+}
+.section-head .label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .28em; text-transform: uppercase;
+  color: rgba(30,60,255,.4);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+}
+.section-head .label::before { content:''; width:14px; height:1px; background: rgba(30,60,255,.35); }
+.section-head h2 {
+  font-size: 30px; font-weight: 300; letter-spacing: -.02em;
+  color: rgba(200,204,221,.7);
+}
+.section-head a {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--faint); text-decoration: none;
+  border-bottom: 1px solid rgba(200,204,221,.08);
+  padding-bottom: 2px;
+  transition: color .3s, border-color .3s;
+}
+.section-head a:hover { color: var(--dim); border-color: rgba(200,204,221,.2); }
+
+/* ── ARTICLE GRID ───────────────────────────────────── */
+.article-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 1px;
+  background: var(--border);
+  position: relative; z-index: 10;
+}
+
+.article-card {
+  background: var(--card);
+  padding: 32px;
+  position: relative; overflow: hidden;
+  text-decoration: none; color: inherit;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  min-height: 260px;
+  transition: background .3s;
+}
+.article-card:hover { background: #0d0d18; }
+.article-card.featured { min-height: 520px; padding: 40px; }
+
+/* Void accent — appears on hover */
+.article-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(transparent, rgba(30,60,255,.5), transparent);
+  opacity: 0; transition: opacity .4s;
+}
+.article-card:hover::before { opacity: 1; }
+
+/* Top fade — cards emerge from void */
+.article-card::after {
+  content: '';
+  position: absolute; left: 0; right: 0; top: 0; height: 60%;
+  background: linear-gradient(var(--card), transparent);
+  pointer-events: none;
+  transition: opacity .3s;
+}
+.article-card.featured::after { height: 40%; }
+
+.article-card .watermark {
+  position: absolute; top: 20px; right: 24px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 52px; line-height: 1;
+  color: rgba(30,60,255,.04);
+  pointer-events: none; user-select: none;
+  transition: color .3s;
+}
+.article-card.featured .watermark { font-size: 90px; }
+.article-card:hover .watermark { color: rgba(30,60,255,.07); }
+
+.cat-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: .22em; text-transform: uppercase;
+  color: rgba(30,60,255,.45);
+  margin-bottom: 12px;
+  position: relative; z-index: 2;
+}
+
+.article-card h3 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 17px; line-height: 1.35; letter-spacing: .01em;
+  color: rgba(200,204,221,.65);
+  margin-bottom: 14px;
+  position: relative; z-index: 2;
+  transition: color .3s;
+}
+.article-card.featured h3 { font-size: 24px; color: rgba(200,204,221,.75); }
+.article-card:hover h3 { color: rgba(200,204,221,.9); }
+
+.article-card .excerpt {
+  font-size: 13px; line-height: 1.7;
+  color: rgba(200,204,221,.25);
+  margin-bottom: 20px;
+  display: none; position: relative; z-index: 2;
+}
+.article-card.featured .excerpt { display: block; }
+
+.article-card .meta {
+  display: flex; align-items: center; gap: 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(200,204,221,.18);
+  position: relative; z-index: 2;
+}
+.article-card .meta .author { color: rgba(30,60,255,.4); }
+.article-card:hover .meta .author { color: rgba(30,60,255,.65); }
+
+/* ── VOID LINE DIVIDER ───────────────────────────────── */
+.void-line {
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(30,60,255,.2), transparent);
+  position: relative; z-index: 10;
+  margin: 0;
+}
+
+/* ── STRIP ───────────────────────────────────────────── */
+.strip {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1px; background: var(--border);
+  margin-top: 1px; position: relative; z-index: 10;
+}
+.strip-card {
+  background: var(--card);
+  padding: 28px 32px;
+  display: flex; gap: 20px; align-items: flex-start;
+  text-decoration: none; color: inherit;
+  position: relative; overflow: hidden;
+  transition: background .3s;
+}
+.strip-card:hover { background: #0d0d18; }
+.strip-card::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 1px;
+  background: linear-gradient(transparent, rgba(30,60,255,.4), transparent);
+  opacity: 0; transition: opacity .4s;
+}
+.strip-card:hover::before { opacity: 1; }
+
+.strip-num {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 32px; line-height: 1;
+  color: rgba(200,204,221,.04);
+  flex-shrink: 0; transition: color .3s;
+}
+.strip-card:hover .strip-num { color: rgba(30,60,255,.08); }
+.strip-body .cat {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: .2em; text-transform: uppercase;
+  color: rgba(30,60,255,.38); margin-bottom: 8px;
+}
+.strip-body h4 {
+  font-size: 14px; font-weight: 400; line-height: 1.45;
+  color: rgba(200,204,221,.5); margin-bottom: 8px;
+  transition: color .3s;
+}
+.strip-card:hover h4 { color: rgba(200,204,221,.8); }
+.strip-body .meta-s {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .1em;
+  color: rgba(200,204,221,.15);
+}
+
+/* ── CATEGORIES ─────────────────────────────────────── */
+.categories {
+  padding: 64px 40px;
+  position: relative; z-index: 10;
+}
+.categories .sec-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .28em; text-transform: uppercase;
+  color: rgba(30,60,255,.35);
+  display: flex; align-items: center; gap: 8px; margin-bottom: 32px;
+}
+.categories .sec-label::before { content:''; width:14px; height:1px; background: rgba(30,60,255,.3); }
+
+.cat-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+.cat-tag {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .18em; text-transform: uppercase;
+  padding: 9px 18px;
+  border: 1px solid rgba(255,255,255,.05);
+  color: rgba(200,204,221,.25);
+  text-decoration: none;
+  transition: color .3s, border-color .3s, background .3s;
+}
+.cat-tag:hover {
+  color: rgba(200,204,221,.7);
+  border-color: rgba(30,60,255,.3);
+  background: rgba(30,60,255,.05);
+}
+.cat-tag.active {
+  border-color: rgba(30,60,255,.4);
+  color: rgba(30,60,255,.8);
+  background: rgba(30,60,255,.06);
+}
+
+/* ── LOGO BANNER ─────────────────────────────────────── */
+.logo-banner {
+  padding: 96px 40px;
+  display: flex; flex-direction: column; align-items: center;
+  position: relative; z-index: 10;
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+  text-align: center;
+}
+/* Void pulse */
+.logo-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(30,60,255,.04) 0%, transparent 70%);
+  animation: void-pulse 6s ease-in-out infinite alternate;
+}
+@keyframes void-pulse {
+  from { opacity: .5; transform: scale(.95); }
+  to   { opacity: 1;  transform: scale(1.05); }
+}
+.logo-banner img {
+  height: 68px;
+  filter: invert(1) brightness(10) opacity(.18);
+  position: relative;
+  transition: opacity .5s, filter .5s;
+}
+.logo-banner img:hover {
+  filter: invert(1) brightness(1.5) sepia(1) hue-rotate(200deg) saturate(8) brightness(1.5) opacity(.6);
+}
+.logo-banner .tagline {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+  color: rgba(200,204,221,.1);
+  margin-top: 28px; position: relative;
+}
+/* Void coordinates decoration */
+.logo-banner .void-coords {
+  margin-top: 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: .15em;
+  color: rgba(30,60,255,.2);
+}
+
+/* ── FOOTER ──────────────────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 40px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: relative; z-index: 10;
+  background: rgba(2,2,8,.6);
+}
+footer .logo-s img {
+  height: 20px;
+  filter: invert(1) brightness(10) opacity(.15);
+}
+footer .links {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; letter-spacing: .1em;
+  color: rgba(200,204,221,.1);
+}
+footer .links a {
+  color: rgba(30,60,255,.3); text-decoration: none; margin: 0 8px;
+  transition: color .3s;
+}
+footer .links a:hover { color: rgba(30,60,255,.7); }
+footer .version {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: .15em;
+  color: rgba(200,204,221,.07);
+}
+
+</style>
+</head>
+<body>
+
+<div class="noise"></div>
+<div class="grid-bg"></div>
+<div class="vignette"></div>
+<div class="scanlines"></div>
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- ── NAV ── -->
+<nav>
+  <a href="#" class="nav-logo">
+    <img src="../Media/undiscover_logo_2.png" alt="Undiscover">
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Música</a></li>
+    <li><a href="#">Tecnología</a></li>
+    <li><a href="#">Cultura</a></li>
+    <li><a href="#">Archivo</a></li>
+  </ul>
+  <div class="nav-right">
+    <span class="nav-coord">48.2°N // 16.4°E</span>
+    <button class="btn-void">// Ingresar</button>
+  </div>
+</nav>
+
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <div class="hero-left">
+
+    <div class="hero-eyebrow">Artículo destacado</div>
+
+    <h1 class="hero-title">
+      <span class="void-line">// mezzanine_massive-attack.md</span>
+      <span class="glitch" data-text="Mezzanine_">Mezzanine_</span><br>
+      <span style="color: rgba(200,204,221,.35)">Massive Attack</span>
+    </h1>
+
+    <p class="hero-excerpt">
+      Denso, oscuro y paranoico. El disco que capturó la ansiedad de finales del siglo XX como ningún otro. La representación sonora de una red que empezaba a envolverlo todo.
+    </p>
+
+    <div class="hero-meta">
+      <span class="m-blue">15.03.2025</span>
+      <span>·</span>
+      <span>Chazarreta Juan</span>
+      <span>·</span>
+      <span class="m-blue">12 min</span>
+    </div>
+
+    <a href="#" class="btn-void-cta">Leer artículo</a>
+
+    <span class="coord coord-1">// 48.2082° N, 16.3738° E — archivo/musica/</span>
+    <span class="coord coord-2">UNDISCOVER_v0.1 // 2025</span>
+  </div>
+
+  <div class="hero-right">
+    <img class="cover" src="https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=900&q=80" alt="">
+    <div class="overlay"></div>
+    <div class="halftone"></div>
+    <div class="scanline"></div>
+    <div class="label">
+      <div class="cat">// Música</div>
+      <div class="author">Chazarreta Juan</div>
+    </div>
+    <div class="num">01</div>
+  </div>
+</section>
+
+
+<!-- ── TICKER ── -->
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <span class="ticker-item">Tecnología</span>
+    <span class="ticker-item accent">Música</span>
+    <span class="ticker-item">Consumo Cultural</span>
+    <span class="ticker-item">Pensamiento Crítico</span>
+    <span class="ticker-item accent">Y2K Estética</span>
+    <span class="ticker-item">Resistencia Editorial</span>
+    <span class="ticker-item">Archivo Digital</span>
+    <span class="ticker-item accent">Realidad Posmoderna</span>
+    <span class="ticker-item">Tecnología</span>
+    <span class="ticker-item accent">Música</span>
+    <span class="ticker-item">Consumo Cultural</span>
+    <span class="ticker-item">Pensamiento Crítico</span>
+    <span class="ticker-item accent">Y2K Estética</span>
+    <span class="ticker-item">Resistencia Editorial</span>
+    <span class="ticker-item">Archivo Digital</span>
+    <span class="ticker-item accent">Realidad Posmoderna</span>
+  </div>
+</div>
+
+
+<!-- ── SECTION HEADER ── -->
+<div class="section-head">
+  <div>
+    <div class="label">Últimas entradas</div>
+    <h2>El archivo</h2>
+  </div>
+  <a href="#">Ver todo →</a>
+</div>
+
+
+<!-- ── ARTICLE GRID ── -->
+<div class="article-grid">
+
+  <div style="grid-row: 1 / 3;">
+    <a href="#" class="article-card featured">
+      <div class="watermark">01</div>
+      <div class="cat-label">// cultura</div>
+      <h3>La nostalgia como producto: Y2K y la industria del recuerdo manufacturado</h3>
+      <p class="excerpt">Y2K no es solo una estética: es el síntoma de una industria que convirtió la nostalgia en mercancía y el recuerdo en contenido.</p>
+      <div class="meta">
+        <span class="author">Chazarreta Juan</span>
+        <span>·</span>
+        <span>15 min</span>
+      </div>
+    </a>
+  </div>
+
+  <a href="#" class="article-card">
+    <div class="watermark">02</div>
+    <div class="cat-label">// tecnología</div>
+    <h3>El algoritmo como curador: ¿quién decide lo que consumimos?</h3>
+    <div class="meta"><span class="author">L. Ferreyra</span><span>·</span><span>11 min</span></div>
+  </a>
+
+  <a href="#" class="article-card">
+    <div class="watermark">03</div>
+    <div class="cat-label">// música</div>
+    <h3>OK Computer: el manual de instrucciones del siglo XXI</h3>
+    <div class="meta"><span class="author">L. Ferreyra</span><span>·</span><span>14 min</span></div>
+  </a>
+
+  <a href="#" class="article-card">
+    <div class="watermark">04</div>
+    <div class="cat-label">// cultura</div>
+    <h3>El zine como resistencia: formatos físicos en la era digital</h3>
+    <div class="meta"><span class="author">Ana Torres</span><span>·</span><span>8 min</span></div>
+  </a>
+
+  <a href="#" class="article-card">
+    <div class="watermark">05</div>
+    <div class="cat-label">// tecnología</div>
+    <h3>Redes sociales como archivo involuntario de la cultura contemporánea</h3>
+    <div class="meta"><span class="author">Chazarreta Juan</span><span>·</span><span>9 min</span></div>
+  </a>
+
+</div>
+
+
+<!-- ── VOID LINE ── -->
+<div class="void-line"></div>
+
+
+<!-- ── STRIP ── -->
+<div class="strip">
+  <a href="#" class="strip-card">
+    <div class="strip-num">06</div>
+    <div class="strip-body">
+      <div class="cat">// música</div>
+      <h4>Dummy_ Portishead: el trip-hop como arqueología emocional</h4>
+      <div class="meta-s">Ana Torres · 10 min</div>
+    </div>
+  </a>
+  <a href="#" class="strip-card">
+    <div class="strip-num">07</div>
+    <div class="strip-body">
+      <div class="cat">// cultura</div>
+      <h4>Debut_ Björk: cuando la electrónica se volvió orgánica</h4>
+      <div class="meta-s">Ana Torres · 7 min</div>
+    </div>
+  </a>
+  <a href="#" class="strip-card">
+    <div class="strip-num">08</div>
+    <div class="strip-body">
+      <div class="cat">// tecnología</div>
+      <h4>IA y autoría cultural: ¿quién firma cuando escribe la máquina?</h4>
+      <div class="meta-s">Chazarreta Juan · 13 min</div>
+    </div>
+  </a>
+</div>
+
+
+<!-- ── CATEGORIES ── -->
+<div class="categories">
+  <div class="sec-label">Explorar por sección</div>
+  <div class="cat-tags">
+    <a href="#" class="cat-tag active">Todo</a>
+    <a href="#" class="cat-tag">Música</a>
+    <a href="#" class="cat-tag">Tecnología</a>
+    <a href="#" class="cat-tag">Cultura</a>
+    <a href="#" class="cat-tag">Crónicas</a>
+    <a href="#" class="cat-tag">Pensamiento</a>
+  </div>
+</div>
+
+
+<!-- ── LOGO BANNER ── -->
+<div class="logo-banner">
+  <img src="../Media/undiscover_logo_1.png" alt="Undiscover">
+  <p class="tagline">Resistencia Editorial · Zine Digital · v0.1</p>
+  <p class="void-coords">48.2082° N, 16.3738° E // epoch: 2025</p>
+</div>
+
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="logo-s"><img src="../Media/undiscover_logo_2.png" alt=""></div>
+  <div class="links">
+    UNDISCOVER © 2025 —
+    <a href="#">Instagram</a>
+    <a href="#">Newsletter</a>
+  </div>
+  <div class="version">v0.1 // ARCHIVO EN CONSTRUCCIÓN</div>
+</footer>
+
+
+<script>
+const cur  = document.getElementById('cursor')
+const ring = document.getElementById('cursorRing')
+document.addEventListener('mousemove', e => {
+  cur.style.left  = ring.style.left  = e.clientX + 'px'
+  cur.style.top   = ring.style.top   = e.clientY + 'px'
+})
+document.querySelectorAll('a, button').forEach(el => {
+  el.addEventListener('mouseenter', () => {
+    ring.style.width = ring.style.height = '44px'
+    ring.style.opacity = '.25'
+  })
+  el.addEventListener('mouseleave', () => {
+    ring.style.width = ring.style.height = '28px'
+    ring.style.opacity = '.15'
+  })
+})
+</script>
+</body>
+</html>

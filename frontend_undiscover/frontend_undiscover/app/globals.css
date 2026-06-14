@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --black:   #0d0d14;
+  --blue:    #2e5bff;
+  --pink:    #ff2d8f;
+  --amber:   #ffb830;
+  --mercury: #99afbf;
+  --white:   #f0f2ff;
+}
+
+.grad-text {
+  background: linear-gradient(135deg, #2e5bff, #ff2d8f);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.grad-bg {
+  background: linear-gradient(135deg, #2e5bff 0%, #7b3fff 50%, #ff2d8f 100%);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-space), 'Space Grotesk', sans-serif;
+  overflow-x: hidden;
+  cursor: none;
+}
+
+a, button { cursor: none; }
+
+.font-mono-display {
+  font-family: var(--font-mono-display), 'Share Tech Mono', monospace;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ffffff15; border-radius: 2px; }
+
+/* ── ON AIR blink ──────────────────────────────────── */
+@keyframes on-air-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.15; }
+}
+
+/* ── Glitch text hover ─────────────────────────────── */
+.glitch-hover {
+  display: inline-block;
+}
+.glitch-hover:hover {
+  animation: glitch-text 0.28s steps(2) 1;
+}
+@keyframes glitch-text {
+  0%   { transform: translate(0); text-shadow: none; filter: none; }
+  20%  { transform: translate(-3px, 0); text-shadow: 3px 0 #ff2d8f, -3px 0 #2e5bff; filter: hue-rotate(60deg); }
+  40%  { transform: translate(3px, 0);  text-shadow: -2px 0 #2e5bff, 2px 0 #ff2d8f; filter: hue-rotate(-60deg); }
+  60%  { transform: translate(-1px, 0); filter: blur(0.4px); }
+  80%  { transform: translate(1px, 0);  text-shadow: 1px 0 #ffb830; }
+  100% { transform: translate(0); text-shadow: none; filter: none; }
+}
+
+/* ── VHS freeze on image hover ─────────────────────── */
+.vhs-freeze {
+  position: relative;
+}
+.vhs-freeze::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+}
+.vhs-freeze:hover::after {
+  animation: vhs-pause 0.4s steps(3) 1;
+}
+@keyframes vhs-pause {
+  0%   {
+    opacity: 0;
+    background: transparent;
+    transform: translate(0);
+  }
+  33%  {
+    opacity: 1;
+    background: linear-gradient(
+      transparent 28%, rgba(255,255,255,.25) 28%, rgba(255,255,255,.25) 30%, transparent 30%,
+      transparent 60%, rgba(46,91,255,.4) 60%, rgba(46,91,255,.4) 62%, transparent 62%
+    );
+    transform: translate(-6px, 0);
+  }
+  66%  {
+    opacity: 1;
+    background: linear-gradient(
+      transparent 45%, rgba(255,45,143,.35) 45%, rgba(255,45,143,.35) 47%, transparent 47%,
+      transparent 70%, rgba(255,255,255,.15) 70%, rgba(255,255,255,.15) 71%, transparent 71%
+    );
+    transform: translate(8px, 0);
+  }
+  100% {
+    opacity: 0;
+    background: transparent;
+    transform: translate(0);
+  }
+}
+
+/* ── Scroll chromatic aberration ───────────────────── */
+@keyframes chrom-ab {
+  0%   { filter: none; }
+  30%  { filter: hue-rotate(20deg) saturate(1.4); }
+  60%  { filter: hue-rotate(-20deg) saturate(1.3); }
+  100% { filter: none; }
+}
+.scroll-glitch {
+  animation: chrom-ab 0.2s steps(3) forwards;
+}
