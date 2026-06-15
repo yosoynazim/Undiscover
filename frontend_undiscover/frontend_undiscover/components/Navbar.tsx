@@ -27,8 +27,7 @@ export default function Navbar() {
           alt="Undiscover"
           width={140}
           height={36}
-          className="h-9 w-auto"
-          style={{ filter: 'invert(1) brightness(2)', mixBlendMode: 'screen', opacity: 0.9 }}
+          className="h-9 w-auto brightness-0 invert opacity-90"
           priority
         />
       </Link>
@@ -64,7 +63,7 @@ export default function Navbar() {
         <span className="font-mono text-[11px] tracking-widest">
           <span style={{ color: '#2e5bff' }}>//</span>
           {' '}
-          <span style={{ background: 'linear-gradient(90deg, #2e5bff, #ff2d8f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ZINE DIGITAL</span>
+          <span style={{ background: 'linear-gradient(90deg, #2e5bff, #ff2d8f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ARCHIVO VIVO</span>
         </span>
 
         {/* Auth */}

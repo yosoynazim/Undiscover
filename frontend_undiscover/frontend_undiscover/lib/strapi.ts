@@ -97,3 +97,22 @@ export async function postComment(
   }
   return res.json()
 }
+
+export async function subscribeToNewsletter(email: string) {
+  const res = await fetch(`${STRAPI_URL}/api/subscribers`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(TOKEN ? { Authorization: `Bearer ${TOKEN}` } : {}),
+    },
+    body: JSON.stringify({ data: { email } }),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    if (data?.error?.details?.errors?.[0]?.message?.includes('unique')) {
+      throw new Error('Ya estás suscripto')
+    }
+    throw new Error(data?.error?.message ?? 'Error al suscribirte')
+  }
+  return data
+}

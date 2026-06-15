@@ -4,13 +4,18 @@ import { getArticles, getFeaturedArticles, getCategories } from '@/lib/strapi'
 import { getStrapiMedia, formatDate } from '@/lib/utils'
 import ArticleCard from '@/components/ArticleCard'
 import Footer from '@/components/Footer'
+import Marquee from '@/components/Marquee'
 import { Article, Category } from '@/lib/types'
 
 const TICKER_ITEMS = [
   { label: 'Undiscover', cls: 'text-[#2e5bff]' },
-  { label: 'Zine Digital', cls: 'text-[#ff2d8f]' },
-  { label: 'Undiscover', cls: 'text-[#ffb830]' },
-  { label: 'Zine Digital', cls: 'text-white/40' },
+  { label: 'Archivo Vivo', cls: 'text-[#ff2d8f]' },
+  { label: 'Curaduría', cls: 'text-[#2e5bff]' },
+  { label: 'Sin algoritmos', cls: 'text-[#ff2d8f]' },
+  { label: 'Undiscover', cls: 'text-[#2e5bff]' },
+  { label: 'Archivo Vivo', cls: 'text-[#ff2d8f]' },
+  { label: 'Curaduría', cls: 'text-[#2e5bff]' },
+  { label: 'Sin algoritmos', cls: 'text-[#ff2d8f]' },
 ]
 
 export const dynamic = 'force-dynamic'
@@ -47,7 +52,7 @@ export default async function Home() {
 
       {/* ── HERO ── */}
       {hero && (
-        <section className="relative min-h-screen grid grid-cols-2 overflow-hidden">
+        <section className="relative min-h-screen grid grid-cols-1 md:grid-cols-2 overflow-hidden">
           {/* Ambient glow */}
           <div
             className="absolute inset-0 pointer-events-none z-0"
@@ -59,7 +64,7 @@ export default async function Home() {
           />
 
           {/* Izquierda */}
-          <div className="relative z-10 flex flex-col justify-end px-14 pb-20 pt-24">
+          <div className="relative z-10 flex flex-col justify-end px-6 sm:px-10 md:px-14 pb-10 md:pb-20 pt-10 md:pt-24">
             {/* Eyebrow */}
             <div className="flex items-center gap-3 font-mono text-[11px] text-[#ff2d8f] tracking-[.25em] uppercase mb-6 before:content-[''] before:w-6 before:h-px before:bg-[#ff2d8f]">
               Artículo destacado
@@ -105,7 +110,7 @@ export default async function Home() {
           </div>
 
           {/* Derecha — imagen */}
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden hidden md:block">
             {getStrapiMedia(hero.cover_image?.url) && (
               <>
                 <Image
@@ -181,24 +186,10 @@ export default async function Home() {
       )}
 
       {/* ── TICKER ── */}
-      <div className="relative overflow-hidden border-t border-white/[.07] border-b border-white/[.07] py-2.5 z-10 bg-[#0d0d14]/80">
-        <div className="flex whitespace-nowrap" style={{ animation: 'ticker 22s linear infinite' }}>
-          {[...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span
-              key={i}
-              className={`font-mono text-[11px] tracking-[.22em] uppercase px-10 inline-flex items-center gap-10 after:content-['◆'] after:text-[7px] after:opacity-50 ${item.cls}`}
-            >
-              {item.label}
-            </span>
-          ))}
-        </div>
-        {/* Fades laterales */}
-        <div className="absolute left-0 top-0 bottom-0 w-20 pointer-events-none z-10" style={{ background: 'linear-gradient(to right, #0d0d14, transparent)' }} />
-        <div className="absolute right-0 top-0 bottom-0 w-20 pointer-events-none z-10" style={{ background: 'linear-gradient(to left, #0d0d14, transparent)' }} />
-      </div>
+      <Marquee items={TICKER_ITEMS} />
 
       {/* ── SECCIÓN ARTÍCULOS ── */}
-      <div className="flex items-baseline justify-between px-10 pt-16 pb-8 border-b border-white/[.06] relative z-10">
+      <div className="flex items-baseline justify-between px-6 sm:px-10 pt-12 md:pt-16 pb-6 md:pb-8 border-b border-white/[.06] relative z-10">
         <div>
           <div className="flex items-center gap-3 font-mono text-[11px] text-[#ff2d8f] tracking-[.25em] uppercase before:content-[''] before:w-5 before:h-px before:bg-[#ff2d8f]">
             Últimas entradas
@@ -220,11 +211,11 @@ export default async function Home() {
       {/* ── GRID ── */}
       {gridArticles.length > 0 && (
         <div
-          className="relative z-10"
-          style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: 'auto auto', gap: '1px', background: 'rgba(255,255,255,.06)' }}
+          className="relative z-10 article-grid"
+          style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1px', background: 'rgba(255,255,255,.06)' }}
         >
           {gridArticles.map((article, i) => (
-            <div key={article.id} style={i === 0 ? { gridRow: '1 / 3' } : undefined}>
+            <div key={article.id} className={i === 0 ? 'md:row-span-2' : ''}>
               <ArticleCard article={article} featured={i === 0} />
             </div>
           ))}
@@ -240,8 +231,8 @@ export default async function Home() {
       {/* ── STRIP ── */}
       {stripArticles.length > 0 && (
         <div
-          className="relative z-10"
-          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'rgba(255,255,255,.06)' }}
+          className="relative z-10 article-strip"
+          style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1px', background: 'rgba(255,255,255,.06)' }}
         >
           {stripArticles.map((article, i) => (
             <Link
@@ -274,7 +265,7 @@ export default async function Home() {
       )}
 
       {/* ── CATEGORÍAS ── */}
-      <div className="px-10 py-16 relative z-10">
+      <div className="px-6 sm:px-10 py-12 md:py-16 relative z-10">
         <div className="flex items-center gap-3 font-mono text-[11px] text-[#ff2d8f] tracking-[.25em] uppercase before:content-[''] before:w-5 before:h-px before:bg-[#ff2d8f]">
           Explorar por sección
         </div>
@@ -315,16 +306,16 @@ export default async function Home() {
           style={{ filter: 'invert(1) brightness(10)', opacity: 0.15 }}
         />
         <p className="font-mono text-[11px] tracking-[.3em] uppercase text-white/[.1] mt-6">
-          Resistencia Editorial · Zine Digital · v0.1
+          Exploración Permanente · Archivo Vivo · v0.1
         </p>
       </div>
 
       <Footer />
 
       <style>{`
-        @keyframes ticker {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
+        @media (min-width: 768px) {
+          .article-grid { grid-template-columns: 2fr 1fr 1fr !important; grid-template-rows: auto auto !important; }
+          .article-strip { grid-template-columns: repeat(3, 1fr) !important; }
         }
         @keyframes scan {
           from { transform: translateY(-100%); }

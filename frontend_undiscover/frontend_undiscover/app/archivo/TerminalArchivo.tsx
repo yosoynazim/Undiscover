@@ -205,7 +205,7 @@ export default function TerminalArchivo({ articles, categories }: Props) {
       setOutput([
         pmt('whoami', path), sp(),
         txt(`<span style="color:#ffffff50">editor@undiscover</span>`),
-        txt(`<span style="color:#ffffff25">Resistencia Editorial · Zine Digital · v0.1</span>`),
+        txt(`<span style="color:#ffffff25">Exploración Permanente · Archivo Vivo · v0.1</span>`),
         sp(),
       ])
       setFilteredList([])
