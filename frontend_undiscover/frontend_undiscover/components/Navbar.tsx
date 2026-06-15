@@ -18,10 +18,10 @@ export default function Navbar() {
   const { user, logout, openAuthModal } = useAuth()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-4 border-b border-white/[.07] backdrop-blur-md bg-[#0d0d14]/85" style={{ willChange: 'transform' }}>
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-4 border-b border-white/[.07] bg-[#0d0d14]">
 
       {/* Logo */}
-      <Link href="/" className="flex items-center no-underline" style={{ willChange: 'transform' }}>
+      <Link href="/" className="flex items-center no-underline">
         <Image
           src="/logo-white.png"
           alt="Undiscover"
