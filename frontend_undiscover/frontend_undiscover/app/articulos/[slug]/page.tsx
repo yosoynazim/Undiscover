@@ -57,7 +57,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         <div className="absolute left-0 right-0 h-0.5 pointer-events-none opacity-20 z-40"
           style={{ background: 'linear-gradient(transparent, #ff2d8f, transparent)', animation: 'scan 5s linear infinite' }} />
 
-        <div className="relative z-40 px-10 pb-16 max-w-[860px]">
+        <div className="relative z-40 px-6 md:px-10 pb-16 max-w-[860px]">
           {/* Breadcrumb */}
           <div className="flex items-center gap-2 font-mono text-[11px] tracking-[.18em] uppercase text-[#99afbf] mb-6">
             <Link href="/" className="hover:text-[#ff2d8f] transition-colors">Home</Link>
@@ -82,7 +82,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
           <h1 className="font-mono text-[clamp(32px,5vw,64px)] leading-[1.05] text-white mb-6 tracking-[-0.01em]">
             {article.title}
           </h1>
-          <div className="flex items-center gap-6 flex-wrap">
+          <div className="flex items-center gap-4 md:gap-6 flex-wrap">
             {article.author && (
               <div className="flex items-center gap-3">
                 {avatarUrl && (
@@ -109,10 +109,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
       <div className="relative z-10 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(46,91,255,.3), rgba(255,45,143,.3), transparent)', boxShadow: '0 0 20px rgba(255,45,143,.1)' }} />
 
       {/* Layout artículo */}
-      <div className="max-w-[1200px] mx-auto px-10 grid grid-cols-[1fr_280px] gap-0 relative z-10">
+      <div className="max-w-[1200px] mx-auto px-6 md:px-10 grid grid-cols-1 md:grid-cols-[1fr_280px] gap-0 relative z-10">
 
         {/* Cuerpo */}
-        <article className="py-16 pr-16 border-r border-white/[.06]">
+        <article className="py-10 md:py-16 md:pr-16 md:border-r border-white/[.06]">
           {article.excerpt && (
             <p className="text-[20px] leading-[1.65] text-[#99afbf] font-light mb-10 pb-10 border-b border-white/[.06]">
               {article.excerpt}
@@ -140,7 +140,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
         </article>
 
         {/* Sidebar */}
-        <aside className="py-16 pl-10 flex flex-col gap-12">
+        <aside className="py-10 md:py-16 md:pl-10 flex flex-col gap-12">
           {/* Autor */}
           {article.author && (
             <div>
