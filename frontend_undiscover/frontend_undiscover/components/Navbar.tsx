@@ -17,14 +17,15 @@ export default function Navbar() {
   const { user, logout, openAuthModal } = useAuth()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-10 py-4 border-b border-white/[.07] bg-[#0d0d14] transform-gpu will-change-transform">
+    <nav className="sticky top-0 z-[60] flex items-center justify-between px-4 md:px-10 py-4 border-b border-white/[.07] bg-[#0d0d14]">
 
       {/* Logo */}
       <Link href="/" className="flex items-center no-underline">
         <img
-          src="/logo-white.png"
+          src="/logo.png"
           alt="Undiscover"
           className="h-9 w-auto"
+          style={{ filter: 'invert(1) brightness(10)', opacity: 0.85 }}
         />
       </Link>
 

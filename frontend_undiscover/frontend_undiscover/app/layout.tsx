@@ -26,7 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-[#1c1c1c] text-[#f8f9fa]">
         <Providers>
           <Navbar />
-          <main className="pt-[61px]">
+          <main>
             {children}
           </main>
         </Providers>
