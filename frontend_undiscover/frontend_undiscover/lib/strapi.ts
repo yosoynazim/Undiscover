@@ -7,10 +7,14 @@ const headers: Record<string, string> = {
 };
 
 async function fetchAPI(path: string) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
   const res = await fetch(`${STRAPI_URL}/api${path}`, {
     headers,
+    signal: controller.signal,
     next: { revalidate: process.env.NODE_ENV === 'development' ? 0 : 60 },
   });
+  clearTimeout(timeout);
   if (!res.ok) throw new Error(`Error fetching ${path}`);
   return res.json();
 }

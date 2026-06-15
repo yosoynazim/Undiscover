@@ -13,6 +13,8 @@ const TICKER_ITEMS = [
   { label: 'Zine Digital', cls: 'text-white/40' },
 ]
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   let articles: Article[] = []
   let featured: Article[] = []
