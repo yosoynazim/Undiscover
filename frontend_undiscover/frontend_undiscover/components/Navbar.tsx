@@ -18,7 +18,7 @@ export default function Navbar() {
   const { user, logout, openAuthModal } = useAuth()
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-10 py-4 border-b border-white/[.07] bg-[#0d0d14]">
+    <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-10 py-4 border-b border-white/[.07] bg-[#0d0d14]">
 
       {/* Logo */}
       <Link href="/" className="flex items-center no-underline">
@@ -33,7 +33,7 @@ export default function Navbar() {
       </Link>
 
       {/* Links */}
-      <ul className="flex gap-8 list-none">
+      <ul className="flex gap-4 md:gap-8 list-none">
         {links.map(({ label, href }) => {
           const active = pathname.startsWith(href)
           return (
@@ -54,13 +54,13 @@ export default function Navbar() {
       {/* Derecha */}
       <div className="flex items-center gap-4">
         {/* ON AIR */}
-        <span className="font-mono text-[10px] tracking-[.15em] uppercase text-[#99afbf]/50 flex items-center gap-1.5">
+        <span className="hidden md:flex font-mono text-[10px] tracking-[.15em] uppercase text-[#99afbf]/50 items-center gap-1.5">
           <span style={{ color: '#ff2d8f', animation: 'on-air-blink 1.2s ease-in-out infinite' }}>●</span>
           EN VIVO
         </span>
 
         {/* Tag */}
-        <span className="font-mono text-[11px] tracking-widest">
+        <span className="hidden md:inline font-mono text-[11px] tracking-widest">
           <span style={{ color: '#2e5bff' }}>//</span>
           {' '}
           <span style={{ background: 'linear-gradient(90deg, #2e5bff, #ff2d8f)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>ARCHIVO VIVO</span>

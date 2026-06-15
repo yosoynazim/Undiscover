@@ -4,7 +4,7 @@ import NewsletterForm from './NewsletterForm'
 
 export default function Footer() {
   return (
-    <footer className="border-t border-white/[.07] px-10 py-8 flex flex-wrap items-center gap-4 justify-between relative z-10">
+    <footer className="border-t border-white/[.07] px-6 md:px-10 py-8 flex flex-wrap items-center gap-4 justify-between relative z-10">
       <Link href="/" className="no-underline shrink-0">
         <Image
           src="/logo.png"
