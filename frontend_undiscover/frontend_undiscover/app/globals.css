@@ -31,10 +31,7 @@ body {
   color: var(--white);
   font-family: var(--font-space), 'Space Grotesk', sans-serif;
   overflow-x: hidden;
-  cursor: none;
 }
-
-a, button { cursor: none; }
 
 .font-mono-display {
   font-family: var(--font-mono-display), 'Share Tech Mono', monospace;
