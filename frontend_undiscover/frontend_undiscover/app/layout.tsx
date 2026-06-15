@@ -25,10 +25,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" className={`${spaceGrotesk.variable} ${shareTechMono.variable}`}>
       <body className="bg-[#1c1c1c] text-[#f8f9fa]">
         <Providers>
-          <Navbar />
-          <main className="pt-[61px]">
-            {children}
-          </main>
+          <div className="flex flex-col h-dvh">
+            <Navbar />
+            <main className="flex-1 overflow-y-auto overflow-x-hidden">
+              {children}
+            </main>
+          </div>
         </Providers>
       </body>
     </html>

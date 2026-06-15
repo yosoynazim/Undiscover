@@ -24,13 +24,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; }
+html, body { overflow: hidden; height: 100%; }
 
 body {
   background: var(--black);
   color: var(--white);
   font-family: var(--font-space), 'Space Grotesk', sans-serif;
-  overflow-x: hidden;
 }
 
 .font-mono-display {
