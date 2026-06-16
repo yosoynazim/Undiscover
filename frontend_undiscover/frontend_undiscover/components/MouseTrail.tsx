@@ -6,6 +6,7 @@ const COLORS = ['#ff2d8f', '#2e5bff', '#ffb830', '#7b3fff']
 
 export default function MouseTrail() {
   useEffect(() => {
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
     let colorIdx = 0
     let last = 0
 

@@ -530,7 +530,6 @@ export default function TerminalArchivo({ articles, categories }: Props) {
                       <div className="flex gap-4 flex-wrap mt-1.5 font-mono text-[11px]" style={{ paddingLeft: 44 }}>
                         {a.author   && <span style={{ color: '#2e5bff' }}>{a.author.name}</span>}
                         {a.category && <span style={{ color: '#ffb830' }}>{a.category.name}</span>}
-                        <span style={{ color: '#ffffff30' }}>{a.read_time} min</span>
                         <span style={{ color: '#ffffff30' }}>{formatDate(a.publishedAt)}</span>
                       </div>
                     </div>
@@ -634,10 +633,6 @@ export default function TerminalArchivo({ articles, categories }: Props) {
                   <div className="flex gap-2 text-[10px] tracking-[.1em]">
                     <span className="text-white/25 min-w-[60px]">fecha</span>
                     <span className="text-white">{formatDate(activeArticle.publishedAt)}</span>
-                  </div>
-                  <div className="flex gap-2 text-[10px] tracking-[.1em]">
-                    <span className="text-white/25 min-w-[60px]">lectura</span>
-                    <span style={{ color: '#39ff8a' }}>{activeArticle.read_time} min</span>
                   </div>
                 </div>
 

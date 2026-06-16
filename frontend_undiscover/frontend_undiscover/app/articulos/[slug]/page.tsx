@@ -97,10 +97,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             <span className="font-mono text-[11px] tracking-[.12em] text-[#99afbf] uppercase">
               {formatDate(article.publishedAt)}
             </span>
-            <div className="w-px h-5 bg-white/20" />
-            <span className="font-mono text-[11px] tracking-[.12em] text-[#99afbf] uppercase">
-              <span className="text-[#2e5bff]">{article.read_time}</span> MIN
-            </span>
           </div>
         </div>
       </section>

@@ -89,7 +89,7 @@ export default function ArticleCard({ article, featured = false }: Props) {
         <div className="flex items-center justify-between font-mono text-[10px] tracking-[.1em] uppercase mt-auto pt-4 border-t border-white/[.06]">
           <span style={{ color: '#ff2d8f' }}>{article.author?.name}</span>
           <span className="text-[#99afbf]/60">
-            {article.read_time} MIN · {formatDate(article.publishedAt)}
+            {formatDate(article.publishedAt)}
           </span>
         </div>
       </div>

@@ -92,8 +92,6 @@ export default async function Home() {
               <span className="text-[#ff2d8f]">{formatDate(hero.publishedAt)}</span>
               <span className="text-white/20">·</span>
               <span className="text-[#99afbf]">Por <span className="text-[#ff2d8f]">{hero.author?.name}</span></span>
-              <span className="text-white/20">·</span>
-              <span className="text-[#2e5bff]">{hero.read_time} MIN</span>
             </div>
 
             {/* CTA */}
@@ -256,7 +254,7 @@ export default async function Home() {
                   {article.title}
                 </div>
                 <div className="font-mono text-[10px] text-[#99afbf] tracking-[.1em]">
-                  {article.author?.name} · {article.read_time} MIN
+                  {article.author?.name}
                 </div>
               </div>
             </Link>

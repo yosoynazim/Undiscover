@@ -7,6 +7,7 @@ export default function CustomCursor() {
   const ringRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
     const dot  = dotRef.current
     const ring = ringRef.current
     if (!dot || !ring) return
