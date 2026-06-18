@@ -80,8 +80,8 @@ export default function AuthModal() {
               Cuenta creada
             </div>
             <p className="font-mono text-[12px] text-[#99afbf] leading-relaxed tracking-[.04em]">
-              Tu cuenta fue creada exitosamente.<br />
-              Un administrador la activará en breve.
+              Te enviamos un mail de confirmación.<br />
+              Revisá tu casilla y seguí el enlace para activar tu cuenta.
             </p>
             <button
               onClick={closeAuthModal}
